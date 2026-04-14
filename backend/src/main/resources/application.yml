@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:latherline_db}
+    username: ${DB_USER:latherline}
+    password: ${DB_PASSWORD:latherline_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update        # use 'validate' in production with Flyway migrations
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        tenant_identifier_resolver: com.latherline.config.tenant.TenantIdentifierResolver
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:lather-and-line-super-secret-jwt-key-change-in-production-32chars}
+    expiration-ms: 86400000    # 24 hours
+
+logging:
+  level:
+    com.latherline: INFO
+    org.springframework.security: WARN

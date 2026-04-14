@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    # H2 in PostgreSQL compatibility mode — no real DB needed for tests
+    url: jdbc:h2:mem:latherline_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      # fresh schema on every test run; safe because H2 is in-memory
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  h2:
+    console:
+      enabled: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:test-secret-key-for-testing-at-least-32chars!!}
+    expiration-ms: 3600000

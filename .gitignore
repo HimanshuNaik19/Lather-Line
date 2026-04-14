@@ -1,0 +1,45 @@
+# ── Maven / Spring Boot ──────────────────────────────────────────────────
+backend/target/
+backend/*.jar
+backend/*.war
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/.mvn/wrapper/maven-wrapper.properties
+
+# ── Node / React ──────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/build/
+
+# ── Environment & secrets ─────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-prod.yml
+
+# ── Docker ────────────────────────────────────────────────────────────────
+infra/postgres_data/
+
+# ── IDE ───────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# ── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs & temp ───────────────────────────────────────────────────────────
+*.log
+backend/startup.log
+backend/backend_log.txt
+backend/Hasher.java
+backend/Hasher.class
+
+# ── Certificates ──────────────────────────────────────────────────────────
+*.pem
+*.key
+*.crt
