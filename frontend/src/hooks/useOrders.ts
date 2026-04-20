@@ -16,6 +16,15 @@ export function useMyOrders() {
   });
 }
 
+/** Fetch all orders for admins */
+export function useAllOrders() {
+  return useQuery({
+    queryKey: [...ORDER_KEYS.all, 'admin-all'],
+    queryFn: ordersApi.getAllOrders,
+    staleTime: 30_000,
+  });
+}
+
 /** Fetch a single order */
 export function useOrder(id: number) {
   return useQuery({

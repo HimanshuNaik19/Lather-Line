@@ -47,10 +47,13 @@ public class OrderController {
 
     /** Get a single order by ID */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'WASHER')")
     public ResponseEntity<OrderDto.OrderResponse> getById(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(orderService.getOrderById(id, user.getUsername()));
+        boolean canViewAll = user.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_WASHER".equals(a.getAuthority()));
+        return ResponseEntity.ok(orderService.getOrderById(id, user.getUsername(), canViewAll));
     }
 
     /** Update order status — washers and admins only */

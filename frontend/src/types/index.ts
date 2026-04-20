@@ -10,8 +10,10 @@ export type OrderStatus =
 // ServiceType mirrors ServiceType.java entity
 export interface ServiceType {
   id: number;
+  businessId?: number;
   name: string;
   pricePerUnit: number;
+  turnaroundHours?: number;
   description: string;
   active: boolean;
 }

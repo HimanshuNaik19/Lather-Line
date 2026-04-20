@@ -5,6 +5,9 @@ export const ordersApi = {
   getMyOrders: () =>
     axiosClient.get<Order[]>('/orders').then((r) => r.data),
 
+  getAllOrders: () =>
+    axiosClient.get<Order[]>('/orders/all').then((r) => r.data),
+
   getOrderById: (id: number) =>
     axiosClient.get<Order>(`/orders/${id}`).then((r) => r.data),
 
