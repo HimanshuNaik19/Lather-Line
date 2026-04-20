@@ -1,6 +1,6 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Users, Inbox, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Inbox, LogOut, Settings } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
@@ -17,7 +17,6 @@ export default function AdminLayout() {
   const navItems = [
     { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Orders',   path: '/admin/orders',    icon: Inbox },
-    { label: 'Users',    path: '/admin/users',     icon: Users },
     { label: 'Services', path: '/admin/services',  icon: Settings },
   ];
 

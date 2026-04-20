@@ -1,31 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Package, Users, DollarSign, Loader2 } from 'lucide-react';
-import { Order } from '@/types';
-import { axiosClient } from '@/api/axiosClient';
+import { Package, Users, IndianRupee, Loader2 } from 'lucide-react';
+import { useAllOrders } from '@/hooks/useOrders';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
 
 export default function AdminDashboardPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: orders = [], isLoading } = useAllOrders();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await axiosClient.get<Order[]>('/orders');
-        setOrders(response.data);
-      } catch (err) {
-        console.error('Failed to fetch admin stats', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 size={40} className="text-brand-500 animate-spin" /></div>;
   }
 
@@ -44,7 +27,7 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-400/10' },
+          { label: 'Total Revenue', value: `₹${totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-400/10' },
           { label: 'Pending Pickups', value: pendingCount, icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
           { label: 'In Progress', value: inProgressCount, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
           { label: 'Total Orders', value: orders.length, icon: Package, color: 'text-brand-400', bg: 'bg-brand-400/10' },
@@ -86,7 +69,7 @@ export default function AdminDashboardPage() {
                   <p className="text-sm text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-brand-400">${order.totalAmount.toFixed(2)}</p>
+                  <p className="font-semibold text-brand-400">₹{order.totalAmount.toFixed(2)}</p>
                   <p className="text-xs text-gray-500 mt-1">{order.orderStatus}</p>
                 </div>
               </div>

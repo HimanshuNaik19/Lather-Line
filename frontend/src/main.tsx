@@ -16,6 +16,9 @@ import OrdersPage from '@/pages/OrdersPage';
 import NewOrderPage from '@/pages/NewOrderPage';
 import AdminLayout from '@/components/AdminLayout';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
+import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
+import AdminOrderDetailsPage from '@/pages/admin/AdminOrderDetailsPage';
+import AdminServicesPage from '@/pages/admin/AdminServicesPage';
 
 import './index.css';
 
@@ -64,6 +67,9 @@ function App() {
         {/* Admin (Business Owner Portal) */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders/:id" element={<AdminOrderDetailsPage />} />
+          <Route path="services" element={<AdminServicesPage />} />
         </Route>
 
         {/* Fallback */}

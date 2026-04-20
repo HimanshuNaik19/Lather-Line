@@ -81,12 +81,12 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDto.OrderResponse getOrderById(Long orderId, String userEmail) {
+    public OrderDto.OrderResponse getOrderById(Long orderId, String userEmail, boolean canViewAll) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        // CUSTOMER can only see their own; ADMIN/WASHER can see all (handled via @PreAuthorize in controller)
-        if (!order.getUser().getEmail().equals(userEmail)) {
+        // CUSTOMER can only see their own; ADMIN/WASHER can see all
+        if (!canViewAll && !order.getUser().getEmail().equals(userEmail)) {
             throw new UnauthorizedException("Access denied");
         }
         return toResponse(order);
