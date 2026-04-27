@@ -19,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -42,26 +45,32 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         ServiceType serviceType = serviceTypeRepository.findById(request.getServiceTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Service type not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Service type not found: " + request.getServiceTypeId()));
 
-        Address address = Address.builder()
-                .user(user)
-                .street(request.getStreet())
-                .city(request.getCity())
-                .state(request.getState())
-                .pinCode(request.getPinCode())
-                .isDefault(true)
-                .build();
+        // Explicitly carry the tenant ID so @TenantId fields are never null on INSERT
+        Long tenantId = user.getBusinessId();
+
+        Address address = new Address(
+                tenantId,
+                user,
+                request.getStreet(),
+                request.getCity(),
+                request.getState(),
+                request.getPinCode(),
+                true
+        );
         address = addressRepository.save(address);
 
-        Order order = Order.builder()
-                .user(user)
-                .serviceType(serviceType)
-                .address(address)
-                .pickupTime(request.getPickupTime())
-                .totalAmount(request.getTotalAmount())
-                .specialInstructions(request.getSpecialInstructions())
-                .build();
+        Order order = new Order(
+                tenantId,
+                user,
+                serviceType,
+                address,
+                request.getPickupTime(),
+                com.latherline.enums.OrderStatus.PENDING,
+                request.getTotalAmount(),
+                request.getSpecialInstructions()
+        );
 
         return toResponse(orderRepository.save(order));
     }
@@ -74,10 +83,27 @@ public class OrderService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    /** Paginated version — used by GET /api/orders?page=0&size=10 */
+    @Transactional(readOnly = true)
+    public Page<OrderDto.OrderResponse> getMyOrdersPaged(String userEmail, int page, int size) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        PageRequest pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pr)
+                .map(this::toResponse);
+    }
+
     @Transactional(readOnly = true)
     public List<OrderDto.OrderResponse> getAllOrders() {
         return orderRepository.findAll()
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    /** Paginated version — used by GET /api/orders/all?page=0&size=20 */
+    @Transactional(readOnly = true)
+    public Page<OrderDto.OrderResponse> getAllOrdersPaged(int page, int size) {
+        PageRequest pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return orderRepository.findAllByOrderByCreatedAtDesc(pr).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -105,6 +131,7 @@ public class OrderService {
     private OrderDto.OrderResponse toResponse(Order order) {
         OrderDto.OrderResponse res = new OrderDto.OrderResponse();
         res.setId(order.getId());
+        res.setPublicId(order.getPublicId());
         res.setServiceTypeName(order.getServiceType().getName());
         res.setAddressCity(order.getAddress().getCity());
         res.setPickupTime(order.getPickupTime());

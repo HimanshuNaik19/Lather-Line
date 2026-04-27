@@ -27,6 +27,9 @@ app:
   jwt:
     secret: ${JWT_SECRET:lather-and-line-super-secret-jwt-key-change-in-production-32chars}
     expiration-ms: 86400000    # 24 hours
+    cookie-name: ll_jwt
+    cookie-secure: ${JWT_COOKIE_SECURE:false}
+    cookie-same-site: ${JWT_COOKIE_SAME_SITE:Lax}
 
 logging:
   level:

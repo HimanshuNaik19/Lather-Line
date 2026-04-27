@@ -24,6 +24,15 @@ public class JwtUtil {
     @Value("${app.jwt.expiration-ms}")
     private long expirationMs;
 
+    @Value("${app.jwt.cookie-name:ll_jwt}")
+    private String cookieName;
+
+    @Value("${app.jwt.cookie-secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.jwt.cookie-same-site:Lax}")
+    private String cookieSameSite;
+
     // ─── Token Creation ───────────────────────────────────────────────────────
 
     public String generateToken(UserDetails userDetails) {
@@ -64,6 +73,22 @@ public class JwtUtil {
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
+    }
+
+    public String getCookieName() {
+        return cookieName;
+    }
+
+    public long getExpirationSeconds() {
+        return expirationMs / 1000;
+    }
+
+    public boolean isCookieSecure() {
+        return cookieSecure;
+    }
+
+    public String getCookieSameSite() {
+        return cookieSameSite;
     }
 
     private Claims extractAllClaims(String token) {

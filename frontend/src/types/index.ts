@@ -28,6 +28,19 @@ export interface Address {
   isDefault: boolean;
 }
 
+export interface PaginationParams {
+  page: number;
+  size: number;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
+
 // Full Order response from GET /api/orders or GET /api/orders/:id
 export interface Order {
   id: number;
@@ -58,7 +71,6 @@ export interface StatusUpdateRequest {
 
 // Auth types
 export interface AuthResponse {
-  token: string;
   email: string;
   fullName: string;
   role: 'CUSTOMER' | 'WASHER' | 'ADMIN';
@@ -67,7 +79,6 @@ export interface AuthResponse {
 export interface LoginRequest {
   email: string;
   password: string;
-  businessId: number;
 }
 
 export interface RegisterRequest {
@@ -75,7 +86,7 @@ export interface RegisterRequest {
   password: string;
   fullName: string;
   phone?: string;
-  businessId: number;
+  businessCode: string;
 }
 
 // Chat types

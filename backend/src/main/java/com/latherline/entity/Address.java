@@ -6,6 +6,7 @@ import lombok.*;
 @Entity
 @Table(name = "addresses")
 @Builder
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Address {
 
     @Id

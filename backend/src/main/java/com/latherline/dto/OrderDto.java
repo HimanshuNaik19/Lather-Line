@@ -50,7 +50,8 @@ public class OrderDto {
 
     @Data
     public static class OrderResponse {
-        private Long id;
+        private Long id;          // internal DB id (kept for dashboard display)
+        private String publicId;  // UUID — safe to use in public URLs
         private String serviceTypeName;
         private String addressCity;
         private LocalDateTime pickupTime;

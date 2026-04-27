@@ -1,31 +1,46 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/ordersApi';
-import type { CreateOrderRequest, StatusUpdateRequest } from '@/types';
+import type { CreateOrderRequest, Order, PageResponse, StatusUpdateRequest } from '@/types';
+
+const DEFAULT_LIST_SIZE = 100;
 
 export const ORDER_KEYS = {
   all: ['orders'] as const,
-  byId: (id: number) => ['orders', id] as const,
+  my: ['orders', 'my'] as const,
+  admin: ['orders', 'admin'] as const,
+  byId: (id: number) => ['orders', 'detail', id] as const,
+  myPage: (page: number, size: number) => ['orders', 'my', page, size] as const,
+  adminPage: (page: number, size: number) => ['orders', 'admin', page, size] as const,
 };
 
-/** Fetch the current user's orders */
-export function useMyOrders() {
-  return useQuery({
-    queryKey: ORDER_KEYS.all,
-    queryFn: ordersApi.getMyOrders,
+export function useMyOrdersPage(page: number, size: number) {
+  return useQuery<PageResponse<Order>>({
+    queryKey: ORDER_KEYS.myPage(page, size),
+    queryFn: () => ordersApi.getMyOrders({ page, size }),
+    placeholderData: (previousData) => previousData,
     staleTime: 30_000,
   });
 }
 
-/** Fetch all orders for admins */
-export function useAllOrders() {
-  return useQuery({
-    queryKey: [...ORDER_KEYS.all, 'admin-all'],
-    queryFn: ordersApi.getAllOrders,
+export function useAllOrdersPage(page: number, size: number) {
+  return useQuery<PageResponse<Order>>({
+    queryKey: ORDER_KEYS.adminPage(page, size),
+    queryFn: () => ordersApi.getAllOrders({ page, size }),
+    placeholderData: (previousData) => previousData,
     staleTime: 30_000,
   });
 }
 
-/** Fetch a single order */
+export function useMyOrders(size = DEFAULT_LIST_SIZE) {
+  const query = useMyOrdersPage(0, size);
+  return { ...query, data: query.data?.content ?? [] };
+}
+
+export function useAllOrders(size = DEFAULT_LIST_SIZE) {
+  const query = useAllOrdersPage(0, size);
+  return { ...query, data: query.data?.content ?? [] };
+}
+
 export function useOrder(id: number) {
   return useQuery({
     queryKey: ORDER_KEYS.byId(id),
@@ -34,7 +49,6 @@ export function useOrder(id: number) {
   });
 }
 
-/** Create a new order */
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -45,7 +59,6 @@ export function useCreateOrder() {
   });
 }
 
-/** Update order status (WASHER / ADMIN) */
 export function useUpdateOrderStatus(orderId: number) {
   const queryClient = useQueryClient();
   return useMutation({

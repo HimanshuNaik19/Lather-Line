@@ -1,45 +1,76 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { AuthResponse } from '@/types';
+import { authApi } from '@/api/authApi';
+import { AUTH_UNAUTHORIZED_EVENT } from '@/api/axiosClient';
 
 interface AuthContextValue {
   user: AuthResponse | null;
-  token: string | null;
-  login: (data: AuthResponse) => void;
-  logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (data: AuthResponse) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getStoredUser(): AuthResponse | null {
-  try {
-    const raw = localStorage.getItem('ll_user');
-    return raw ? (JSON.parse(raw) as AuthResponse) : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthResponse | null>(getStoredUser);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('ll_token'));
+  const [user, setUser] = useState<AuthResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback((data: AuthResponse) => {
-    localStorage.setItem('ll_token', data.token);
-    localStorage.setItem('ll_user', JSON.stringify(data));
-    setToken(data.token);
-    setUser(data);
+  useEffect(() => {
+    let active = true;
+
+    const syncUserFromCookie = async () => {
+      try {
+        const currentUser = await authApi.getCurrentUser();
+        if (active) {
+          setUser(currentUser);
+        }
+      } catch {
+        if (active) {
+          setUser(null);
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    const handleUnauthorized = () => {
+      if (active) {
+        setUser(null);
+        setIsLoading(false);
+      }
+    };
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    void syncUserFromCookie();
+
+    return () => {
+      active = false;
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('ll_token');
-    localStorage.removeItem('ll_user');
-    setToken(null);
-    setUser(null);
+  const login = useCallback((data: AuthResponse) => {
+    setUser(data);
+    setIsLoading(false);
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore network errors on logout and still clear local auth state.
+    } finally {
+      setUser(null);
+      setIsLoading(false);
+    }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

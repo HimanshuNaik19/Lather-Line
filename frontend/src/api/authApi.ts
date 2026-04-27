@@ -7,4 +7,10 @@ export const authApi = {
 
   register: (data: RegisterRequest) =>
     axiosClient.post<AuthResponse>('/auth/register', data).then((r) => r.data),
+
+  getCurrentUser: () =>
+    axiosClient.get<AuthResponse>('/auth/me').then((r) => r.data),
+
+  /** Asks the server to clear the ll_jwt HttpOnly cookie */
+  logout: () => axiosClient.post('/auth/logout'),
 };

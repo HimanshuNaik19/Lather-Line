@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "service_types", uniqueConstraints = @UniqueConstraint(columnNames = {"business_id", "name"}))
 @Builder
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class ServiceType {
 
     @Id

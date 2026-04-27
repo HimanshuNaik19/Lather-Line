@@ -7,15 +7,28 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
 @Builder
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Public-facing identifier — safe to expose in URLs, never sequential */
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false, length = 36)
+    private String publicId;
+
+    @PrePersist
+    protected void assignPublicId() {
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID().toString();
+        }
+    }
 
     @org.hibernate.annotations.TenantId
     @Column(name = "business_id", nullable = false)
@@ -82,6 +95,14 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
     }
 
     public Long getBusinessId() {

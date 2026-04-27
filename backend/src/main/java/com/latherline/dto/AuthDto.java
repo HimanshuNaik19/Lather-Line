@@ -3,6 +3,7 @@ package com.latherline.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 public class AuthDto {
@@ -20,8 +21,12 @@ public class AuthDto {
 
         private String phone;
 
-        // Optional — defaults to business 1 if not provided
-        private Long businessId = 1L;
+        /**
+         * Invite code that identifies which business this user belongs to.
+         * Must match the 'code' column of the businesses table (e.g. "sunshine").
+         * Defaults to "sunshine" so existing flows keep working.
+         */
+        private String businessCode = "sunshine";
     }
 
     @Data
@@ -32,22 +37,22 @@ public class AuthDto {
         @NotBlank
         private String password;
 
-        // Optional — defaults to business 1 if not provided
+        // Optional - defaults to business 1 if not provided
         private Long businessId = 1L;
     }
 
     @Data
+    @AllArgsConstructor
     public static class AuthResponse {
-        private String token;
         private String email;
         private String fullName;
         private String role;
+    }
 
-        public AuthResponse(String token, String email, String fullName, String role) {
-            this.token = token;
-            this.email = email;
-            this.fullName = fullName;
-            this.role = role;
-        }
+    @Data
+    @AllArgsConstructor
+    public static class AuthSession {
+        private String token;
+        private AuthResponse user;
     }
 }

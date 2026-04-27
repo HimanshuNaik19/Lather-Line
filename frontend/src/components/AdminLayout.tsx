@@ -1,10 +1,14 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Inbox, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Inbox, Loader2, LogOut, Settings } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const location = useLocation();
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-page-gradient flex items-center justify-center text-white"><Loader2 size={36} className="animate-spin text-brand-400" /></div>;
+  }
 
   if (!user || user.role !== 'ADMIN') {
     return <Navigate to="/dashboard" replace />;

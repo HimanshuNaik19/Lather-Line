@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Loader2 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { Navbar } from '@/components/Navbar';
@@ -14,6 +15,8 @@ import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 import OrdersPage from '@/pages/OrdersPage';
 import NewOrderPage from '@/pages/NewOrderPage';
+import AccountPage from '@/pages/AccountPage';
+import SettingsPage from '@/pages/SettingsPage';
 import AdminLayout from '@/components/AdminLayout';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
@@ -33,7 +36,14 @@ const queryClient = new QueryClient({
 
 /** Guard customer routes — redirect to login if not authenticated */
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center text-white">
+        <Loader2 size={36} className="animate-spin text-brand-400" />
+      </div>
+    );
+  }
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
@@ -63,6 +73,8 @@ function App() {
         <Route path="/dashboard"  element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/orders/new" element={<PrivateRoute><NewOrderPage /></PrivateRoute>} />
         <Route path="/orders"     element={<PrivateRoute><OrdersPage /></PrivateRoute>} />
+        <Route path="/account"    element={<PrivateRoute><AccountPage /></PrivateRoute>} />
+        <Route path="/settings"   element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
 
         {/* Admin (Business Owner Portal) */}
         <Route path="/admin" element={<AdminLayout />}>

@@ -1,12 +1,12 @@
 import { axiosClient } from './axiosClient';
-import type { Order, CreateOrderRequest, StatusUpdateRequest } from '@/types';
+import type { CreateOrderRequest, Order, PageResponse, PaginationParams, StatusUpdateRequest } from '@/types';
 
 export const ordersApi = {
-  getMyOrders: () =>
-    axiosClient.get<Order[]>('/orders').then((r) => r.data),
+  getMyOrders: (params: PaginationParams) =>
+    axiosClient.get<PageResponse<Order>>('/orders', { params }).then((r) => r.data),
 
-  getAllOrders: () =>
-    axiosClient.get<Order[]>('/orders/all').then((r) => r.data),
+  getAllOrders: (params: PaginationParams) =>
+    axiosClient.get<PageResponse<Order>>('/orders/all', { params }).then((r) => r.data),
 
   getOrderById: (id: number) =>
     axiosClient.get<Order>(`/orders/${id}`).then((r) => r.data),

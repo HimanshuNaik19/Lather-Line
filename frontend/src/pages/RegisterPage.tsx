@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/api/authApi';
-import { Shirt, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shirt, Eye, EyeOff, Loader2, KeyRound } from 'lucide-react';
 
 export default function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '' });
+  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '', businessCode: 'sunshine' });
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const data = await authApi.register({ ...form, businessId: 1 });
+      const data = await authApi.register({ ...form });
       login(data);
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -78,6 +78,23 @@ export default function RegisterPage() {
           {field('reg-name',  'Full Name',    'text',  'fullName', 'Jane Doe')}
           {field('reg-email', 'Email',        'email', 'email',    'you@example.com')}
           {field('reg-phone', 'Phone Number', 'tel',   'phone',    '+91 9876543210', false)}
+
+          {/* Business Invite Code */}
+          <div className="space-y-1.5">
+            <label className="text-sm text-gray-300 font-medium flex items-center gap-1.5" htmlFor="reg-code">
+              <KeyRound size={13} className="text-brand-400" /> Business Invite Code
+            </label>
+            <input
+              id="reg-code"
+              type="text"
+              required
+              value={form.businessCode}
+              onChange={(e) => setForm({ ...form, businessCode: e.target.value })}
+              placeholder="e.g. sunshine"
+              className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 transition-colors"
+            />
+            <p className="text-xs text-gray-500">Get this code from your laundry business. Default: <code className="text-brand-400">sunshine</code></p>
+          </div>
 
           <div className="space-y-1.5">
             <label className="text-sm text-gray-300 font-medium" htmlFor="reg-password">Password</label>

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface BusinessRepository extends JpaRepository<Business, Long> {
     List<Business> findByActiveTrue();
+    java.util.Optional<Business> findByCode(String code);
 }

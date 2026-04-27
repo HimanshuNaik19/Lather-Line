@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await authApi.login({ ...form, businessId: 1 });
+      const data = await authApi.login(form);
       login(data);
       if (data.role === 'ADMIN' || data.role === 'WASHER') {
         navigate('/admin/dashboard');

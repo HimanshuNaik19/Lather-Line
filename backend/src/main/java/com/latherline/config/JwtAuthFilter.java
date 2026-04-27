@@ -2,6 +2,7 @@ package com.latherline.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -47,21 +48,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        // 1. Try HttpOnly cookie (browser clients)
+        String jwt = extractJwtFromCookie(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // 2. Fall back to Authorization header (Postman / API clients)
+        if (jwt == null) {
+            final String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                jwt = authHeader.substring(7);
+            }
+        }
+
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        final String finalJwt = jwt;
+
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtUtil.extractUsername(jwt);
+            final String userEmail = jwtUtil.extractUsername(finalJwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-                if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                if (jwtUtil.isTokenValid(finalJwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -70,9 +81,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
+
                     // Extract businessId for Multi-Tenancy
-                    Long businessId = jwtUtil.extractClaim(jwt, claims -> claims.get("businessId", Long.class));
+                    Long businessId = jwtUtil.extractClaim(finalJwt, claims -> claims.get("businessId", Long.class));
                     if (businessId != null) {
                         com.latherline.config.tenant.TenantContextHolder.setTenantId(businessId);
                     }
@@ -85,5 +96,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } finally {
             com.latherline.config.tenant.TenantContextHolder.clear();
         }
+    }
+
+    /** Reads the JWT from the 'll_jwt' HttpOnly cookie, or returns null. */
+    private String extractJwtFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("ll_jwt".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

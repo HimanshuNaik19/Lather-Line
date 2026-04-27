@@ -12,6 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = {"business_id", "email"}))
 @Builder
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class User {
 
     @Id

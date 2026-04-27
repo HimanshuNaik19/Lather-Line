@@ -4,14 +4,20 @@ import com.latherline.dto.OrderDto;
 import com.latherline.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -20,9 +26,8 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    /** Create a new order — authenticated customers only */
     @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<OrderDto.OrderResponse> create(
             @AuthenticationPrincipal UserDetails user,
             @Valid @RequestBody OrderDto.CreateRequest request) {
@@ -30,22 +35,23 @@ public class OrderController {
                 .body(orderService.createOrder(user.getUsername(), request));
     }
 
-    /** List my orders */
     @GetMapping
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
-    public ResponseEntity<List<OrderDto.OrderResponse>> myOrders(
-            @AuthenticationPrincipal UserDetails user) {
-        return ResponseEntity.ok(orderService.getMyOrders(user.getUsername()));
+    public ResponseEntity<Page<OrderDto.OrderResponse>> myOrders(
+            @AuthenticationPrincipal UserDetails user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(orderService.getMyOrdersPaged(user.getUsername(), page, size));
     }
 
-    /** List ALL orders for the Tenant (Business Admins) */
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<OrderDto.OrderResponse>> allOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+    public ResponseEntity<Page<OrderDto.OrderResponse>> allOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(orderService.getAllOrdersPaged(page, size));
     }
 
-    /** Get a single order by ID */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'WASHER')")
     public ResponseEntity<OrderDto.OrderResponse> getById(
@@ -56,7 +62,6 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderById(id, user.getUsername(), canViewAll));
     }
 
-    /** Update order status — washers and admins only */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('WASHER', 'ADMIN')")
     public ResponseEntity<OrderDto.OrderResponse> updateStatus(
