@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { useAllOrders } from '@/hooks/useOrders';
 import type { OrderStatus } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
+import { formatOrderRef } from '@/utils/orderRef';
 
 const STATUSES: Array<'ALL' | OrderStatus> = ['ALL', 'PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'];
 
@@ -15,9 +16,13 @@ export default function AdminOrdersPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (orders ?? []).filter((o) => {
-      const statusMatch = status === 'ALL' || o.orderStatus === status;
-      const queryMatch = !q || o.serviceTypeName.toLowerCase().includes(q) || o.addressCity.toLowerCase().includes(q) || String(o.id).includes(q);
+    return (orders ?? []).filter((order) => {
+      const statusMatch = status === 'ALL' || order.orderStatus === status;
+      const queryMatch =
+        !q ||
+        order.serviceTypeName.toLowerCase().includes(q) ||
+        order.addressCity.toLowerCase().includes(q) ||
+        order.publicId.toLowerCase().includes(q);
       return statusMatch && queryMatch;
     });
   }, [orders, query, status]);
@@ -40,7 +45,7 @@ export default function AdminOrdersPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search customer..."
+            placeholder="Search order, city, or service..."
             className="w-full bg-surface-dark border border-surface-border rounded-xl py-3 pl-12 pr-4 text-xl"
           />
         </div>
@@ -49,8 +54,10 @@ export default function AdminOrdersPage() {
           onChange={(e) => setStatus(e.target.value as 'ALL' | OrderStatus)}
           className="bg-surface-dark border border-surface-border rounded-xl px-4 py-3 text-xl md:w-64"
         >
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s === 'ALL' ? 'All Statuses' : s.replace('_', ' ')}</option>
+          {STATUSES.map((value) => (
+            <option key={value} value={value}>
+              {value === 'ALL' ? 'All Statuses' : value.replace('_', ' ')}
+            </option>
           ))}
         </select>
       </div>
@@ -60,12 +67,16 @@ export default function AdminOrdersPage() {
 
       <div className="space-y-4">
         {filtered.map((order) => (
-          <Link key={order.id} to={`/admin/orders/${order.id}`} className="block bg-surface-dark border border-surface-border rounded-2xl p-6 hover:border-brand-500/60 transition-colors">
+          <Link
+            key={order.publicId}
+            to={`/admin/orders/${order.publicId}`}
+            className="block bg-surface-dark border border-surface-border rounded-2xl p-6 hover:border-brand-500/60 transition-colors"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
               <div>
-                <p className="text-gray-400 text-lg">Customer</p>
-                <p className="font-semibold text-sm">{order.addressCity}</p>
-                <p className="text-gray-400 text-sm">Order #{order.id}</p>
+                <p className="text-gray-400 text-lg">Reference</p>
+                <p className="font-semibold text-sm">{formatOrderRef(order.publicId)}</p>
+                <p className="text-gray-400 text-sm truncate">{order.addressCity}</p>
               </div>
               <div>
                 <p className="text-gray-400 text-lg">Service</p>
@@ -77,7 +88,7 @@ export default function AdminOrdersPage() {
               </div>
               <div>
                 <p className="text-gray-400 text-lg">Total & Date</p>
-                <p className="text-brand-400 font-bold text-sm">₹{order.totalAmount}</p>
+                <p className="text-brand-400 font-bold text-sm">Rs {order.totalAmount}</p>
                 <p className="text-gray-400 text-sm">{format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm')}</p>
               </div>
               <div className="flex justify-end text-gray-500">

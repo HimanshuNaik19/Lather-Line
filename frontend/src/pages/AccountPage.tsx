@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { format } from 'date-fns';
+import { formatOrderRef } from '@/utils/orderRef';
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -14,17 +15,16 @@ export default function AccountPage() {
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName ?? '');
-  const [phone, setPhone]     = useState('');
-  const [saved, setSaved]     = useState(false);
+  const [phone, setPhone] = useState('');
+  const [saved, setSaved] = useState(false);
 
   const totalOrders = orders?.length ?? 0;
-  const delivered   = orders?.filter((o) => o.orderStatus === 'DELIVERED').length ?? 0;
-  const inProgress  = orders?.filter((o) =>
-    ['PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY'].includes(o.orderStatus)
+  const delivered = orders?.filter((order) => order.orderStatus === 'DELIVERED').length ?? 0;
+  const inProgress = orders?.filter((order) =>
+    ['PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY'].includes(order.orderStatus)
   ).length ?? 0;
 
   const handleSave = () => {
-    // TODO: wire to PATCH /api/users/me when backend endpoint is ready
     setSaved(true);
     setEditing(false);
     setTimeout(() => setSaved(false), 3000);
@@ -32,7 +32,7 @@ export default function AccountPage() {
 
   const avatarInitials = (user?.fullName ?? 'U')
     .split(' ')
-    .map((w) => w[0])
+    .map((word) => word[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -40,18 +40,13 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-surface text-white pt-20 pb-12 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
-
-        {/* ── Page header ─────────────────────────────────── */}
         <div className="animate-fade-in">
           <h1 className="font-display font-bold text-3xl">My Account</h1>
           <p className="text-gray-400 mt-1">Manage your profile and view your activity</p>
         </div>
 
-        {/* ── Profile card ────────────────────────────────── */}
         <div className="bg-card-gradient border border-surface-border rounded-2xl p-6 animate-slide-up">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-
-            {/* Avatar */}
             <div className="relative">
               <div className="w-20 h-20 rounded-2xl bg-brand-gradient flex items-center justify-center text-2xl font-bold text-white shadow-glow-brand select-none">
                 {avatarInitials}
@@ -61,7 +56,6 @@ export default function AccountPage() {
               </button>
             </div>
 
-            {/* Name & role */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-display font-bold text-xl text-white">
@@ -75,7 +69,6 @@ export default function AccountPage() {
               <p className="text-gray-500 text-xs mt-1">Member since April 2026</p>
             </div>
 
-            {/* Edit toggle */}
             <div className="flex gap-2">
               {editing ? (
                 <>
@@ -110,14 +103,12 @@ export default function AccountPage() {
           )}
         </div>
 
-        {/* ── Profile details form ─────────────────────────── */}
         <div className="bg-card-gradient border border-surface-border rounded-2xl p-6 animate-slide-up">
           <h3 className="font-display font-semibold text-lg mb-5 flex items-center gap-2">
             <User size={17} className="text-brand-400" /> Personal Information
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            {/* Full Name */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Full Name</label>
               {editing ? (
@@ -135,7 +126,6 @@ export default function AccountPage() {
               )}
             </div>
 
-            {/* Email (read-only always) */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Email Address</label>
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-input border border-surface-border text-gray-400">
@@ -145,7 +135,6 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* Phone */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Phone Number</label>
               {editing ? (
@@ -164,7 +153,6 @@ export default function AccountPage() {
               )}
             </div>
 
-            {/* Role */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Account Role</label>
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-input border border-surface-border text-gray-400">
@@ -176,12 +164,11 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* ── Stats ────────────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Total Orders',  value: totalOrders, icon: Package,     color: 'text-brand-400',  bg: 'bg-brand-500/10' },
-            { label: 'In Progress',   value: inProgress,  icon: Clock,       color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-            { label: 'Delivered',     value: delivered,   icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10' },
+            { label: 'Total Orders', value: totalOrders, icon: Package, color: 'text-brand-400', bg: 'bg-brand-500/10' },
+            { label: 'In Progress', value: inProgress, icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+            { label: 'Delivered', value: delivered, icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10' },
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className="bg-card-gradient border border-surface-border rounded-2xl p-5 flex flex-col gap-3 hover:border-brand-500/30 transition-colors">
               <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
@@ -195,7 +182,6 @@ export default function AccountPage() {
           ))}
         </div>
 
-        {/* ── Recent orders ─────────────────────────────────── */}
         <div className="bg-card-gradient border border-surface-border rounded-2xl p-6 animate-slide-up">
           <h3 className="font-display font-semibold text-lg mb-5 flex items-center gap-2">
             <Calendar size={17} className="text-brand-400" /> Order History
@@ -213,12 +199,12 @@ export default function AccountPage() {
             <div className="space-y-2">
               {orders.slice(0, 5).map((order) => (
                 <div
-                  key={order.id}
+                  key={order.publicId}
                   className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-surface-input border border-surface-border hover:border-brand-500/30 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-white truncate">
-                      Order #{order.id} · {order.serviceTypeName}
+                      Order #{formatOrderRef(order.publicId)} | {order.serviceTypeName}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}
@@ -226,14 +212,13 @@ export default function AccountPage() {
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge status={order.orderStatus} />
-                    <span className="text-brand-400 font-semibold text-sm">₹{order.totalAmount}</span>
+                    <span className="text-brand-400 font-semibold text-sm">Rs {order.totalAmount}</span>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

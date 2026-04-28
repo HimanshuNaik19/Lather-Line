@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class OrderDto {
 
@@ -33,10 +34,12 @@ public class OrderDto {
         public String getState() { return state; }
         public String getPinCode() { return pinCode; }
 
-        @NotNull @Future(message = "Pickup time must be in the future")
+        @NotNull
+        @Future(message = "Pickup time must be in the future")
         private LocalDateTime pickupTime;
 
-        @NotNull @Positive
+        @NotNull
+        @Positive
         private BigDecimal totalAmount;
 
         private String specialInstructions;
@@ -50,8 +53,7 @@ public class OrderDto {
 
     @Data
     public static class OrderResponse {
-        private Long id;          // internal DB id (kept for dashboard display)
-        private String publicId;  // UUID — safe to use in public URLs
+        private UUID publicId;
         private String serviceTypeName;
         private String addressCity;
         private LocalDateTime pickupTime;

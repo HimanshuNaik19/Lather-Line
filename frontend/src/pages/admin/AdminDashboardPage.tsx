@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, IndianRupee, Loader2, Package, Users } from 'lucide-react';
 import { useAllOrdersPage } from '@/hooks/useOrders';
+import { formatOrderRef } from '@/utils/orderRef';
 
 const PAGE_SIZE = 5;
 
@@ -87,10 +88,10 @@ export default function AdminDashboardPage() {
             <div className="px-6 py-8 text-center text-gray-400">No orders placed yet.</div>
           ) : (
             orders.map((order) => (
-              <div key={order.id} className="px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+              <div key={order.publicId} className="px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
                 <div>
                   <p className="font-medium text-white flex items-center gap-2">
-                    Order #{order.id}
+                    Order #{formatOrderRef(order.publicId)}
                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
                       {order.serviceTypeName}
                     </span>

@@ -80,7 +80,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="orders/:id" element={<AdminOrderDetailsPage />} />
+          <Route path="orders/:publicId" element={<AdminOrderDetailsPage />} />
           <Route path="services" element={<AdminServicesPage />} />
         </Route>
 

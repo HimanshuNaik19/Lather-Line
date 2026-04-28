@@ -8,12 +8,12 @@ export const ordersApi = {
   getAllOrders: (params: PaginationParams) =>
     axiosClient.get<PageResponse<Order>>('/orders/all', { params }).then((r) => r.data),
 
-  getOrderById: (id: number) =>
-    axiosClient.get<Order>(`/orders/${id}`).then((r) => r.data),
+  getOrderByPublicId: (publicId: string) =>
+    axiosClient.get<Order>(`/orders/${publicId}`).then((r) => r.data),
 
   createOrder: (data: CreateOrderRequest) =>
     axiosClient.post<Order>('/orders', data).then((r) => r.data),
 
-  updateStatus: (id: number, data: StatusUpdateRequest) =>
-    axiosClient.patch<Order>(`/orders/${id}/status`, data).then((r) => r.data),
+  updateStatus: (publicId: string, data: StatusUpdateRequest) =>
+    axiosClient.patch<Order>(`/orders/${publicId}/status`, data).then((r) => r.data),
 };

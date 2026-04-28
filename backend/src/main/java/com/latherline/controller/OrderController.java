@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -52,21 +54,21 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAllOrdersPaged(page, size));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{publicId}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'WASHER')")
-    public ResponseEntity<OrderDto.OrderResponse> getById(
-            @PathVariable Long id,
+    public ResponseEntity<OrderDto.OrderResponse> getByPublicId(
+            @PathVariable UUID publicId,
             @AuthenticationPrincipal UserDetails user) {
         boolean canViewAll = user.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_WASHER".equals(a.getAuthority()));
-        return ResponseEntity.ok(orderService.getOrderById(id, user.getUsername(), canViewAll));
+        return ResponseEntity.ok(orderService.getOrderByPublicId(publicId, user.getUsername(), canViewAll));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{publicId}/status")
     @PreAuthorize("hasAnyRole('WASHER', 'ADMIN')")
     public ResponseEntity<OrderDto.OrderResponse> updateStatus(
-            @PathVariable Long id,
+            @PathVariable UUID publicId,
             @RequestBody OrderDto.StatusUpdateRequest request) {
-        return ResponseEntity.ok(orderService.updateStatus(id, request.getOrderStatus()));
+        return ResponseEntity.ok(orderService.updateStatus(publicId, request.getOrderStatus()));
     }
 }

@@ -20,13 +20,13 @@ public class Order {
     private Long id;
 
     /** Public-facing identifier — safe to expose in URLs, never sequential */
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false, length = 36)
-    private String publicId;
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
+    private UUID publicId;
 
     @PrePersist
     protected void assignPublicId() {
         if (this.publicId == null) {
-            this.publicId = UUID.randomUUID().toString();
+            this.publicId = UUID.randomUUID();
         }
     }
 
@@ -97,11 +97,11 @@ public class Order {
         this.id = id;
     }
 
-    public String getPublicId() {
+    public UUID getPublicId() {
         return publicId;
     }
 
-    public void setPublicId(String publicId) {
+    public void setPublicId(UUID publicId) {
         this.publicId = publicId;
     }
 

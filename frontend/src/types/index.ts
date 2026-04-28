@@ -41,9 +41,9 @@ export interface PageResponse<T> {
   size: number;
 }
 
-// Full Order response from GET /api/orders or GET /api/orders/:id
+// Full Order response from GET /api/orders or GET /api/orders/:publicId
 export interface Order {
-  id: number;
+  publicId: string;
   serviceTypeName: string;
   addressCity: string;
   pickupTime: string;          // ISO-8601 string from backend
@@ -64,7 +64,7 @@ export interface CreateOrderRequest {
   specialInstructions?: string;
 }
 
-// For PATCH /api/orders/:id/status
+// For PATCH /api/orders/:publicId/status
 export interface StatusUpdateRequest {
   orderStatus: OrderStatus;
 }

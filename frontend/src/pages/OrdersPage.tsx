@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Package, Plus } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useMyOrdersPage } from '@/hooks/useOrders';
+import { formatOrderRef } from '@/utils/orderRef';
 
 const PAGE_SIZE = 8;
 
@@ -66,7 +67,7 @@ export default function OrdersPage() {
           <div className={`space-y-3 animate-fade-in transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
             {orders.map((order) => (
               <div
-                key={order.id}
+                key={order.publicId}
                 className="group bg-card-gradient border border-surface-border rounded-2xl p-5 hover:border-brand-500/50 hover:shadow-glow-brand transition-all duration-200"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -76,12 +77,12 @@ export default function OrdersPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <p className="font-semibold text-white">Order #{order.id}</p>
+                      <p className="font-semibold text-white">Order #{formatOrderRef(order.publicId)}</p>
                       <StatusBadge status={order.orderStatus} />
                     </div>
                     <p className="text-sm text-gray-300">{order.serviceTypeName}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {order.addressCity} · Pickup: {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}
+                      {order.addressCity} | Pickup: {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}
                     </p>
                   </div>
 

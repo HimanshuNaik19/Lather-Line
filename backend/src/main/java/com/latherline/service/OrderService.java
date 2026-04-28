@@ -13,15 +13,16 @@ import com.latherline.repository.OrderRepository;
 import com.latherline.repository.ServiceTypeRepository;
 import com.latherline.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +48,6 @@ public class OrderService {
         ServiceType serviceType = serviceTypeRepository.findById(request.getServiceTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Service type not found: " + request.getServiceTypeId()));
 
-        // Explicitly carry the tenant ID so @TenantId fields are never null on INSERT
         Long tenantId = user.getBusinessId();
 
         Address address = new Address(
@@ -67,7 +67,7 @@ public class OrderService {
                 serviceType,
                 address,
                 request.getPickupTime(),
-                com.latherline.enums.OrderStatus.PENDING,
+                OrderStatus.PENDING,
                 request.getTotalAmount(),
                 request.getSpecialInstructions()
         );
@@ -80,38 +80,39 @@ public class OrderService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    /** Paginated version — used by GET /api/orders?page=0&size=10 */
     @Transactional(readOnly = true)
     public Page<OrderDto.OrderResponse> getMyOrdersPaged(String userEmail, int page, int size) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        PageRequest pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pr)
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageRequest)
                 .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
     public List<OrderDto.OrderResponse> getAllOrders() {
         return orderRepository.findAll()
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    /** Paginated version — used by GET /api/orders/all?page=0&size=20 */
     @Transactional(readOnly = true)
     public Page<OrderDto.OrderResponse> getAllOrdersPaged(int page, int size) {
-        PageRequest pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return orderRepository.findAllByOrderByCreatedAtDesc(pr).map(this::toResponse);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return orderRepository.findAllByOrderByCreatedAtDesc(pageRequest)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
-    public OrderDto.OrderResponse getOrderById(Long orderId, String userEmail, boolean canViewAll) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+    public OrderDto.OrderResponse getOrderByPublicId(UUID publicId, String userEmail, boolean canViewAll) {
+        Order order = findByPublicIdOrThrow(publicId);
 
-        // CUSTOMER can only see their own; ADMIN/WASHER can see all
         if (!canViewAll && !order.getUser().getEmail().equals(userEmail)) {
             throw new UnauthorizedException("Access denied");
         }
@@ -119,26 +120,27 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderDto.OrderResponse updateStatus(Long orderId, OrderStatus newStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+    public OrderDto.OrderResponse updateStatus(UUID publicId, OrderStatus newStatus) {
+        Order order = findByPublicIdOrThrow(publicId);
         order.setOrderStatus(newStatus);
         return toResponse(orderRepository.save(order));
     }
 
-    // ── Mapper ───────────────────────────────────────────────────────────────
+    private Order findByPublicIdOrThrow(UUID publicId) {
+        return orderRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + publicId));
+    }
 
     private OrderDto.OrderResponse toResponse(Order order) {
-        OrderDto.OrderResponse res = new OrderDto.OrderResponse();
-        res.setId(order.getId());
-        res.setPublicId(order.getPublicId());
-        res.setServiceTypeName(order.getServiceType().getName());
-        res.setAddressCity(order.getAddress().getCity());
-        res.setPickupTime(order.getPickupTime());
-        res.setOrderStatus(order.getOrderStatus());
-        res.setTotalAmount(order.getTotalAmount());
-        res.setSpecialInstructions(order.getSpecialInstructions());
-        res.setCreatedAt(order.getCreatedAt());
-        return res;
+        OrderDto.OrderResponse response = new OrderDto.OrderResponse();
+        response.setPublicId(order.getPublicId());
+        response.setServiceTypeName(order.getServiceType().getName());
+        response.setAddressCity(order.getAddress().getCity());
+        response.setPickupTime(order.getPickupTime());
+        response.setOrderStatus(order.getOrderStatus());
+        response.setTotalAmount(order.getTotalAmount());
+        response.setSpecialInstructions(order.getSpecialInstructions());
+        response.setCreatedAt(order.getCreatedAt());
+        return response;
     }
 }

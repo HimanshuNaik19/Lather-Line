@@ -8,7 +8,7 @@ export const ORDER_KEYS = {
   all: ['orders'] as const,
   my: ['orders', 'my'] as const,
   admin: ['orders', 'admin'] as const,
-  byId: (id: number) => ['orders', 'detail', id] as const,
+  detail: (publicId: string) => ['orders', 'detail', publicId] as const,
   myPage: (page: number, size: number) => ['orders', 'my', page, size] as const,
   adminPage: (page: number, size: number) => ['orders', 'admin', page, size] as const,
 };
@@ -41,11 +41,11 @@ export function useAllOrders(size = DEFAULT_LIST_SIZE) {
   return { ...query, data: query.data?.content ?? [] };
 }
 
-export function useOrder(id: number) {
-  return useQuery({
-    queryKey: ORDER_KEYS.byId(id),
-    queryFn: () => ordersApi.getOrderById(id),
-    enabled: !!id,
+export function useOrder(publicId?: string) {
+  return useQuery<Order>({
+    queryKey: publicId ? ORDER_KEYS.detail(publicId) : ['orders', 'detail', 'missing'],
+    queryFn: () => ordersApi.getOrderByPublicId(publicId!),
+    enabled: Boolean(publicId),
   });
 }
 
@@ -59,13 +59,13 @@ export function useCreateOrder() {
   });
 }
 
-export function useUpdateOrderStatus(orderId: number) {
+export function useUpdateOrderStatus(publicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: StatusUpdateRequest) => ordersApi.updateStatus(orderId, data),
+    mutationFn: (data: StatusUpdateRequest) => ordersApi.updateStatus(publicId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: ORDER_KEYS.byId(orderId) });
+      queryClient.invalidateQueries({ queryKey: ORDER_KEYS.detail(publicId) });
     },
   });
 }
