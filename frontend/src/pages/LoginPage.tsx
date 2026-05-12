@@ -19,11 +19,13 @@ export default function LoginPage() {
     try {
       const data = await authApi.login(form);
       login(data);
-      if (data.role === 'ADMIN' || data.role === 'WASHER') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      const destinations: Record<string, string> = {
+        ADMIN:    '/admin/dashboard',
+        MANAGER:  '/manager/dashboard',
+        WASHER:   '/washer/orders',
+        CUSTOMER: '/dashboard',
+      };
+      navigate(destinations[data.role] ?? '/dashboard');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Invalid credentials. Please try again.');

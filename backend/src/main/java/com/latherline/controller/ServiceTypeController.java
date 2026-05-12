@@ -32,7 +32,7 @@ public class ServiceTypeController {
 
     /** Admin only — list all services (active + inactive) */
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<ServiceType>> listAll() {
         return ResponseEntity.ok(serviceTypeRepository.findAll());
     }
@@ -56,6 +56,8 @@ public class ServiceTypeController {
         serviceType.setName(payload.getName());
         serviceType.setDescription(payload.getDescription());
         serviceType.setPricePerUnit(payload.getPricePerUnit());
+        serviceType.setTurnaroundHours(payload.getTurnaroundHours());
+        serviceType.setUnit(payload.getUnit() != null ? payload.getUnit() : "KG");
         serviceType.setActive(payload.getActive());
         return ResponseEntity.ok(serviceTypeRepository.save(serviceType));
     }

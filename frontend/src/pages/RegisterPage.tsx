@@ -7,7 +7,7 @@ import { Shirt, Eye, EyeOff, Loader2, KeyRound } from 'lucide-react';
 export default function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '', businessCode: 'sunshine' });
+  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '', businessCode: '' });
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -93,7 +93,7 @@ export default function RegisterPage() {
               placeholder="e.g. sunshine"
               className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 transition-colors"
             />
-            <p className="text-xs text-gray-500">Get this code from your laundry business. Default: <code className="text-brand-400">sunshine</code></p>
+            <p className="text-xs text-gray-500">Your laundry business will provide this code when you sign up.</p>
           </div>
 
           <div className="space-y-1.5">

@@ -15,7 +15,7 @@ export default function AccountPage() {
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName ?? '');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(user?.phone ?? '');
   const [saved, setSaved] = useState(false);
 
   const totalOrders = orders?.length ?? 0;
@@ -204,7 +204,7 @@ export default function AccountPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-white truncate">
-                      Order #{formatOrderRef(order.publicId)} | {order.serviceTypeName}
+                      Order #{formatOrderRef(order.publicId)} | {order.items.map(i => i.serviceName).join(', ')}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}

@@ -23,10 +23,11 @@ public class AuthDto {
 
         /**
          * Invite code that identifies which business this user belongs to.
-         * Must match the 'code' column of the businesses table (e.g. "sunshine").
-         * Defaults to "sunshine" so existing flows keep working.
+         * Must match the 'code' column of an active business row.
+         * Required — registration will fail without a valid code.
          */
-        private String businessCode = "sunshine";
+        @NotBlank(message = "Business invite code is required. Ask your business owner for the code.")
+        private String businessCode;
     }
 
     @Data
@@ -36,9 +37,6 @@ public class AuthDto {
 
         @NotBlank
         private String password;
-
-        // Optional - defaults to business 1 if not provided
-        private Long businessId = 1L;
     }
 
     @Data
@@ -47,6 +45,8 @@ public class AuthDto {
         private String email;
         private String fullName;
         private String role;
+        private Long businessId;
+        private String phone;
     }
 
     @Data

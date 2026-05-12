@@ -8,9 +8,13 @@ spring:
     password: ${DB_PASSWORD:latherline_pass}
     driver-class-name: org.postgresql.Driver
 
+  flyway:
+    baseline-on-migrate: true
+
   jpa:
+    open-in-view: false       # prevent early Session opening that locks tenant context
     hibernate:
-      ddl-auto: update        # use 'validate' in production with Flyway migrations
+      ddl-auto: validate      # schema is managed by Flyway now
     show-sql: false
     properties:
       hibernate:

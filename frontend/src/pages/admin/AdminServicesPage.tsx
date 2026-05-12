@@ -15,6 +15,7 @@ const emptyForm: ServiceForm = {
   name: '',
   description: '',
   pricePerUnit: 0,
+  unit: 'KG',
   turnaroundHours: 24,
   active: true,
 };
@@ -56,7 +57,14 @@ function ServiceModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm mb-2">Price per kg (₹)</label>
+              <label className="block text-sm mb-2">Pricing Unit</label>
+              <select className="w-full border border-surface-border rounded-xl bg-surface-dark px-4 py-3 text-sm" value={value.unit} onChange={(e) => onChange({ ...value, unit: e.target.value as 'KG' | 'PIECE' })}>
+                <option value="KG">Per KG (weight-based)</option>
+                <option value="PIECE">Per Piece (garment-based)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm mb-2">Price per {value.unit === 'KG' ? 'kg' : 'piece'} (₹)</label>
               <input type="number" min={0} className="w-full border border-surface-border rounded-xl bg-transparent px-4 py-3 text-sm" value={value.pricePerUnit} onChange={(e) => onChange({ ...value, pricePerUnit: Number(e.target.value) })} />
             </div>
             <div>
@@ -108,6 +116,7 @@ export default function AdminServicesPage() {
       name: service.name,
       description: service.description,
       pricePerUnit: service.pricePerUnit,
+      unit: service.unit ?? 'KG',
       turnaroundHours: service.turnaroundHours ?? 24,
       active: service.active,
     });

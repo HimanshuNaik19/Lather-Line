@@ -10,4 +10,6 @@ import java.util.List;
 public interface BusinessRepository extends JpaRepository<Business, Long> {
     List<Business> findByActiveTrue();
     java.util.Optional<Business> findByCode(String code);
+    /** Used by registration — only matches businesses that haven't been deactivated */
+    java.util.Optional<Business> findByCodeAndActiveTrue(String code);
 }

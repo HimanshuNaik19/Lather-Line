@@ -84,7 +84,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white text-sm truncate">
-                      Order #{formatOrderRef(order.publicId)} | {order.serviceTypeName}
+                      Order #{formatOrderRef(order.publicId)} | {order.items.map(i => i.serviceName).join(', ')}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       Pickup: {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}

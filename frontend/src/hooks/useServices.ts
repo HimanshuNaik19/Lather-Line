@@ -10,8 +10,13 @@ export function useActiveServices() {
   return useQuery({
     queryKey: SERVICE_KEYS.all,
     queryFn: servicesApi.getActiveServices,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
+}
+
+/** Alias for useActiveServices — convenience for pages that just need active services */
+export function useServices() {
+  return useActiveServices();
 }
 
 export function useAllServices() {

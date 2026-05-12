@@ -7,12 +7,16 @@ export type OrderStatus =
   | 'DELIVERED'
   | 'CANCELLED';
 
+// Pricing unit for a service
+export type ServiceUnit = 'KG' | 'PIECE';
+
 // ServiceType mirrors ServiceType.java entity
 export interface ServiceType {
   id: number;
   businessId?: number;
   name: string;
   pricePerUnit: number;
+  unit: ServiceUnit;
   turnaroundHours?: number;
   description: string;
   active: boolean;
@@ -41,26 +45,55 @@ export interface PageResponse<T> {
   size: number;
 }
 
-// Full Order response from GET /api/orders or GET /api/orders/:publicId
+// A single line in an order
+export interface OrderItem {
+  serviceTypeId: number;
+  serviceName: string;
+  unit: ServiceUnit;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  label?: string;
+}
+
+// Full Order response from backend
 export interface Order {
   publicId: string;
-  serviceTypeName: string;
+  customerName?: string;      // present in admin/staff views
+  customerPhone?: string;
+  items: OrderItem[];
   addressCity: string;
-  pickupTime: string;          // ISO-8601 string from backend
+  addressStreet?: string;
+  pickupTime: string;          // ISO-8601
   orderStatus: OrderStatus;
   totalAmount: number;
   specialInstructions?: string;
-  createdAt: string;           // ISO-8601 string
+  createdAt: string;           // ISO-8601
 }
 
-export interface CreateOrderRequest {
+// Per-item payload for creating an order
+export interface OrderItemRequest {
   serviceTypeId: number;
+  quantity: number;
+  label?: string;
+}
+
+// Customer online order creation
+export interface CreateOrderRequest {
+  items: OrderItemRequest[];
   street: string;
   city: string;
   state: string;
   pinCode: string;
-  pickupTime: string;          // ISO-8601 string
-  totalAmount: number;
+  pickupTime: string;          // ISO-8601
+  specialInstructions?: string;
+}
+
+// Walk-in POS order creation (staff)
+export interface PosCreateRequest {
+  customerPhone: string;
+  customerName: string;
+  items: OrderItemRequest[];
   specialInstructions?: string;
 }
 
@@ -73,7 +106,9 @@ export interface StatusUpdateRequest {
 export interface AuthResponse {
   email: string;
   fullName: string;
-  role: 'CUSTOMER' | 'WASHER' | 'ADMIN';
+  role: 'CUSTOMER' | 'WASHER' | 'MANAGER' | 'ADMIN';
+  businessId: number;
+  phone?: string;
 }
 
 export interface LoginRequest {

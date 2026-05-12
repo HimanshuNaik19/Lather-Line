@@ -9,7 +9,7 @@ import { formatOrderRef } from '@/utils/orderRef';
 const flow = ['PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY', 'DELIVERED'] as const;
 
 export default function AdminOrderDetailsPage() {
-  const { publicId } = useParams();
+  const { publicId = '' } = useParams();
   const { data: order, isLoading } = useOrder(publicId);
 
   const activeIndex = useMemo(
@@ -70,26 +70,46 @@ export default function AdminOrderDetailsPage() {
           </div>
 
           <div className="bg-surface-dark border border-surface-border rounded-2xl p-6">
-            <h2 className="font-semibold text-base mb-4">Service Information</h2>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-400">Service Type</p>
-                <p className="font-semibold">{order.serviceTypeName}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Weight</p>
-                <p className="font-semibold">1 kg</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Pickup Time</p>
-                <p className="font-semibold inline-flex items-center gap-2">
-                  <Clock3 size={16} /> {format(new Date(order.pickupTime), 'dd MMM yyyy, HH:mm')}
-                </p>
-              </div>
+            <h2 className="font-semibold text-base mb-4">Items</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-400 border-b border-surface-border">
+                  <th className="pb-2">Service</th>
+                  <th className="pb-2">Qty</th>
+                  <th className="pb-2">Unit Price</th>
+                  <th className="pb-2 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-border">
+                {order.items.map((item, i) => (
+                  <tr key={i}>
+                    <td className="py-2.5">
+                      <p className="font-medium">{item.serviceName}</p>
+                      {item.label && <p className="text-gray-500 text-xs">{item.label}</p>}
+                    </td>
+                    <td className="py-2.5 text-gray-300">{item.quantity}{item.unit === 'KG' ? ' kg' : ' pcs'}</td>
+                    <td className="py-2.5 text-gray-300">₹{item.unitPrice}</td>
+                    <td className="py-2.5 text-brand-400 font-semibold text-right">₹{item.subtotal}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-surface-border">
+                  <td colSpan={3} className="pt-3 font-bold">Total</td>
+                  <td className="pt-3 text-brand-400 font-bold text-right text-base">₹{order.totalAmount}</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="mt-4 flex items-center gap-2 pt-3 border-t border-surface-border text-sm text-gray-400">
+              <Clock3 size={14} /> Pickup: {format(new Date(order.pickupTime), 'dd MMM yyyy, HH:mm')}
             </div>
-            <div className="mt-4 p-4 rounded-lg bg-surface-input text-xl text-gray-300">
-              {order.specialInstructions || 'No special instructions provided.'}
-            </div>
+
+            {order.specialInstructions && (
+              <div className="mt-3 p-4 rounded-lg bg-surface-input text-sm text-gray-300">
+                {order.specialInstructions}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,23 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Package, Plus } from 'lucide-react';
+import { ArrowRight, Loader2, Package, Plus } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
-import { useMyOrdersPage } from '@/hooks/useOrders';
+import { useMyOrders } from '@/hooks/useOrders';
 import { formatOrderRef } from '@/utils/orderRef';
 
-const PAGE_SIZE = 8;
-
 export default function OrdersPage() {
-  const [page, setPage] = useState(0);
-  const { data, isLoading, error, isFetching } = useMyOrdersPage(page, PAGE_SIZE);
-
-  const orders = data?.content ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const totalOrders = data?.totalElements ?? 0;
-  const currentPage = data?.number ?? 0;
-  const hasPrev = currentPage > 0;
-  const hasNext = currentPage < totalPages - 1;
+  const { data: orders = [], isLoading, error } = useMyOrders();
 
   return (
     <div className="min-h-screen bg-surface text-white pt-20 pb-12 px-4">
@@ -26,7 +15,7 @@ export default function OrdersPage() {
           <div>
             <h1 className="font-display font-bold text-3xl">My Orders</h1>
             <p className="text-gray-400 mt-1 text-sm">
-              {totalOrders > 0 ? `${totalOrders} order${totalOrders !== 1 ? 's' : ''} total` : 'Track all your laundry orders'}
+              {orders.length > 0 ? `${orders.length} order${orders.length !== 1 ? 's' : ''} total` : 'Track all your laundry orders'}
             </p>
           </div>
           <Link
@@ -64,7 +53,7 @@ export default function OrdersPage() {
         )}
 
         {orders.length > 0 && (
-          <div className={`space-y-3 animate-fade-in transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
+          <div className="space-y-3 animate-fade-in">
             {orders.map((order) => (
               <div
                 key={order.publicId}
@@ -80,7 +69,9 @@ export default function OrdersPage() {
                       <p className="font-semibold text-white">Order #{formatOrderRef(order.publicId)}</p>
                       <StatusBadge status={order.orderStatus} />
                     </div>
-                    <p className="text-sm text-gray-300">{order.serviceTypeName}</p>
+                    <p className="text-sm text-gray-300">
+                      {order.items.map(i => `${i.serviceName} (${i.quantity}${i.unit === 'KG' ? 'kg' : 'pcs'})`).join(' + ')}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {order.addressCity} | Pickup: {format(new Date(order.pickupTime), 'dd MMM yyyy, h:mm a')}
                     </p>
@@ -102,29 +93,6 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-surface-border animate-fade-in">
-            <button
-              onClick={() => setPage((value) => Math.max(0, value - 1))}
-              disabled={!hasPrev || isFetching}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-surface-border text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={16} /> Previous
-            </button>
-
-            <div className="text-sm text-gray-400">
-              Page {currentPage + 1} of {totalPages}
-            </div>
-
-            <button
-              onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
-              disabled={!hasNext || isFetching}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-surface-border text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Next <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

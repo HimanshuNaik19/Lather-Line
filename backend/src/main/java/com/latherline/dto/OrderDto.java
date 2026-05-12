@@ -1,61 +1,100 @@
 package com.latherline.dto;
 
 import com.latherline.enums.OrderStatus;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class OrderDto {
 
+    // ── Item-level DTO used inside CreateRequest ──────────────────────────────
     @Data
-    public static class CreateRequest {
-        @NotNull
+    public static class OrderItemRequest {
+        @NotNull(message = "serviceTypeId is required")
         private Long serviceTypeId;
 
+        /** KG (e.g. 2.5) or pieces (e.g. 3) — must be positive */
+        @NotNull(message = "quantity is required")
+        @DecimalMin(value = "0.001", message = "quantity must be positive")
+        private BigDecimal quantity;
+
+        /** Optional garment label e.g. "Shirt", "Pants" */
+        private String label;
+    }
+
+    // ── Item-level DTO in responses ───────────────────────────────────────────
+    @Data
+    public static class OrderItemResponse {
+        private Long serviceTypeId;
+        private String serviceName;
+        private String unit;         // "KG" or "PIECE"
+        private BigDecimal quantity;
+        private BigDecimal unitPrice;
+        private BigDecimal subtotal;
+        private String label;
+    }
+
+    // ── Walk-In POS request (single item, quick entry) ────────────────────────
+    @Data
+    public static class PosCreateRequest {
         @NotNull
-        private String street;
+        private String customerPhone;
 
         @NotNull
-        private String city;
+        private String customerName;
 
-        @NotNull
-        private String state;
+        @Valid
+        @NotEmpty(message = "At least one item is required")
+        private List<OrderItemRequest> items;
 
-        @NotNull
-        private String pinCode;
+        private String specialInstructions;
+    }
+
+    // ── Customer online order request ─────────────────────────────────────────
+    @Data
+    public static class CreateRequest {
+        @Valid
+        @NotEmpty(message = "At least one item is required")
+        private List<OrderItemRequest> items;
+
+        @NotNull private String street;
+        @NotNull private String city;
+        @NotNull private String state;
+        @NotNull private String pinCode;
 
         public String getStreet() { return street; }
-        public String getCity() { return city; }
-        public String getState() { return state; }
-        public String getPinCode() { return pinCode; }
+        public String getCity()   { return city;   }
+        public String getState()  { return state;  }
+        public String getPinCode(){ return pinCode; }
 
         @NotNull
         @Future(message = "Pickup time must be in the future")
         private LocalDateTime pickupTime;
 
-        @NotNull
-        @Positive
-        private BigDecimal totalAmount;
-
         private String specialInstructions;
     }
 
+    // ── Status update ─────────────────────────────────────────────────────────
     @Data
     public static class StatusUpdateRequest {
         @NotNull
         private OrderStatus orderStatus;
     }
 
+    // ── Order response (returned for all GET / POST endpoints) ────────────────
     @Data
     public static class OrderResponse {
         private UUID publicId;
-        private String serviceTypeName;
+        private String customerName;        // useful for admin / washer views
+        private String customerPhone;
+        private List<OrderItemResponse> items;
         private String addressCity;
+        private String addressStreet;
         private LocalDateTime pickupTime;
         private OrderStatus orderStatus;
         private BigDecimal totalAmount;

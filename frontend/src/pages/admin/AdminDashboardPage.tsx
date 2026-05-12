@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, IndianRupee, Loader2, Package, Users } from 'lucide-react';
-import { useAllOrdersPage } from '@/hooks/useOrders';
+import { useAllOrders } from '@/hooks/useOrders';
+import type { Order } from '@/types';
 import { formatOrderRef } from '@/utils/orderRef';
 
 const PAGE_SIZE = 5;
@@ -11,21 +12,20 @@ function classNames(...classes: string[]) {
 
 export default function AdminDashboardPage() {
   const [page, setPage] = useState(0);
-  const { data, isLoading, isFetching } = useAllOrdersPage(page, PAGE_SIZE);
+  const { data: allOrders = [], isLoading } = useAllOrders();
 
   if (isLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 size={40} className="text-brand-500 animate-spin" /></div>;
   }
 
-  const orders = data?.content ?? [];
-  const totalOrders = data?.totalElements ?? 0;
-  const totalPages = data?.totalPages ?? 1;
-  const currentPage = data?.number ?? 0;
-  const totalRevenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
-  const pendingCount = orders.filter((order) => order.orderStatus === 'PENDING').length;
-  const inProgressCount = orders.filter((order) => order.orderStatus === 'IN_PROGRESS' || order.orderStatus === 'PICKED_UP').length;
-  const hasPrev = currentPage > 0;
-  const hasNext = currentPage < totalPages - 1;
+  const totalOrders = allOrders.length;
+  const totalRevenue = allOrders.filter(o => o.orderStatus === 'DELIVERED').reduce((acc, o) => acc + o.totalAmount, 0);
+  const pendingCount = allOrders.filter(o => o.orderStatus === 'PENDING').length;
+  const inProgressCount = allOrders.filter(o => o.orderStatus === 'IN_PROGRESS' || o.orderStatus === 'PICKED_UP').length;
+
+  const totalPages = Math.ceil(allOrders.length / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages - 1);
+  const orders = allOrders.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -38,9 +38,9 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Visible Revenue', value: `Rs ${totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-400/10' },
-          { label: 'Pending on Page', value: pendingCount, icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
-          { label: 'In Progress on Page', value: inProgressCount, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+          { label: 'Total Revenue', value: `₹${totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-400/10' },
+          { label: 'Pending', value: pendingCount, icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+          { label: 'In Progress', value: inProgressCount, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
           { label: 'Total Orders', value: totalOrders, icon: Package, color: 'text-brand-400', bg: 'bg-brand-400/10' },
         ].map((stat, index) => {
           const Icon = stat.icon;
@@ -60,7 +60,7 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className={`mt-8 bg-surface-dark border border-surface-border rounded-2xl overflow-hidden transition-opacity ${isFetching ? 'opacity-70' : 'opacity-100'}`}>
+      <div className="mt-8 bg-surface-dark border border-surface-border rounded-2xl overflow-hidden">
         <div className="px-6 py-5 border-b border-surface-border flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Recent Store Orders</h2>
@@ -68,15 +68,15 @@ export default function AdminDashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setPage((value) => Math.max(0, value - 1))}
-              disabled={!hasPrev || isFetching}
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-border text-sm text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={16} /> Previous
             </button>
             <button
-              onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
-              disabled={!hasNext || isFetching}
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-border text-sm text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next <ChevronRight size={16} />
@@ -87,19 +87,21 @@ export default function AdminDashboardPage() {
           {orders.length === 0 ? (
             <div className="px-6 py-8 text-center text-gray-400">No orders placed yet.</div>
           ) : (
-            orders.map((order) => (
+            orders.map((order: Order) => (
               <div key={order.publicId} className="px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors">
                 <div>
-                  <p className="font-medium text-white flex items-center gap-2">
+                  <p className="font-medium text-white flex flex-wrap items-center gap-2">
                     Order #{formatOrderRef(order.publicId)}
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
-                      {order.serviceTypeName}
-                    </span>
+                    {order.items.map((item, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                        {item.serviceName} ({item.quantity}{item.unit === 'KG' ? 'kg' : 'pc'})
+                      </span>
+                    ))}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-brand-400">Rs {order.totalAmount.toFixed(2)}</p>
+                  <p className="font-semibold text-brand-400">₹{order.totalAmount.toFixed(2)}</p>
                   <p className="text-xs text-gray-500 mt-1">{order.orderStatus}</p>
                 </div>
               </div>

@@ -1,71 +1,59 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/ordersApi';
-import type { CreateOrderRequest, Order, PageResponse, StatusUpdateRequest } from '@/types';
-
-const DEFAULT_LIST_SIZE = 100;
+import type { CreateOrderRequest, PosCreateRequest, StatusUpdateRequest } from '@/types';
 
 export const ORDER_KEYS = {
-  all: ['orders'] as const,
-  my: ['orders', 'my'] as const,
-  admin: ['orders', 'admin'] as const,
-  detail: (publicId: string) => ['orders', 'detail', publicId] as const,
-  myPage: (page: number, size: number) => ['orders', 'my', page, size] as const,
-  adminPage: (page: number, size: number) => ['orders', 'admin', page, size] as const,
+  all:        ['orders'] as const,
+  mine:       ['orders', 'mine'] as const,
+  staff:      ['orders', 'staff'] as const,
+  active:     ['orders', 'active'] as const,
+  detail:     (id: string) => ['orders', id] as const,
 };
 
-export function useMyOrdersPage(page: number, size: number) {
-  return useQuery<PageResponse<Order>>({
-    queryKey: ORDER_KEYS.myPage(page, size),
-    queryFn: () => ordersApi.getMyOrders({ page, size }),
-    placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-  });
-}
-
-export function useAllOrdersPage(page: number, size: number) {
-  return useQuery<PageResponse<Order>>({
-    queryKey: ORDER_KEYS.adminPage(page, size),
-    queryFn: () => ordersApi.getAllOrders({ page, size }),
-    placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
-  });
-}
-
-export function useMyOrders(size = DEFAULT_LIST_SIZE) {
-  const query = useMyOrdersPage(0, size);
-  return { ...query, data: query.data?.content ?? [] };
-}
-
-export function useAllOrders(size = DEFAULT_LIST_SIZE) {
-  const query = useAllOrdersPage(0, size);
-  return { ...query, data: query.data?.content ?? [] };
-}
-
-export function useOrder(publicId?: string) {
-  return useQuery<Order>({
-    queryKey: publicId ? ORDER_KEYS.detail(publicId) : ['orders', 'detail', 'missing'],
-    queryFn: () => ordersApi.getOrderByPublicId(publicId!),
-    enabled: Boolean(publicId),
-  });
+// ── Customer hooks ────────────────────────────────────────────────────────────
+export function useMyOrders() {
+  return useQuery({ queryKey: ORDER_KEYS.mine, queryFn: ordersApi.getMyOrders });
 }
 
 export function useCreateOrder() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateOrderRequest) => ordersApi.createOrder(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
   });
 }
 
-export function useUpdateOrderStatus(publicId: string) {
-  const queryClient = useQueryClient();
+// ── Staff hooks (Admin / Manager / Washer) ────────────────────────────────────
+export function useAllOrders() {
+  return useQuery({ queryKey: ORDER_KEYS.staff, queryFn: ordersApi.getAllOrders });
+}
+
+export function useActiveOrders() {
+  return useQuery({ queryKey: ORDER_KEYS.active, queryFn: ordersApi.getActiveOrders });
+}
+
+export function useCreatePosOrder() {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: StatusUpdateRequest) => ordersApi.updateStatus(publicId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: ORDER_KEYS.detail(publicId) });
-    },
+    mutationFn: (data: PosCreateRequest) => ordersApi.createPosOrder(data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, data }: { publicId: string; data: StatusUpdateRequest }) =>
+      ordersApi.updateStatus(publicId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
+  });
+}
+
+// ── Single order ──────────────────────────────────────────────────────────────
+export function useOrder(publicId: string) {
+  return useQuery({
+    queryKey: ORDER_KEYS.detail(publicId),
+    queryFn: () => ordersApi.getOrder(publicId),
+    enabled: !!publicId,
   });
 }

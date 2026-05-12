@@ -1,6 +1,6 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Inbox, Loader2, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Inbox, Loader2, LogOut, Settings, Store } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, isLoading, logout } = useAuth();
@@ -22,6 +22,7 @@ export default function AdminLayout() {
     { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Orders',   path: '/admin/orders',    icon: Inbox },
     { label: 'Services', path: '/admin/services',  icon: Settings },
+    { label: 'Walk-In POS', path: '/admin/pos',  icon: Store },
   ];
 
   return (

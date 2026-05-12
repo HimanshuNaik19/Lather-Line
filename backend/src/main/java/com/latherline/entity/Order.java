@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,9 +41,10 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "service_type_id", nullable = false)
-    private ServiceType serviceType;
+    /** Replaced the single serviceType FK — now an itemized list */
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> items = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "address_id", nullable = false)
@@ -56,6 +59,7 @@ public class Order {
     @Builder.Default
     private OrderStatus orderStatus = OrderStatus.PENDING;
 
+    /** Server-computed sum of all order_items.subtotal — never trusted from frontend */
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
@@ -74,114 +78,55 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Order() {
-        
-    }
+    public Order() {}
 
-    public Order(Long businessId, User user, ServiceType serviceType, Address address, LocalDateTime pickupTime, OrderStatus orderStatus, BigDecimal totalAmount, String specialInstructions) {
+    public Order(Long businessId, User user, Address address,
+                 LocalDateTime pickupTime, OrderStatus orderStatus,
+                 BigDecimal totalAmount, String specialInstructions) {
         this.businessId = businessId;
         this.user = user;
-        this.serviceType = serviceType;
         this.address = address;
         this.pickupTime = pickupTime;
         this.orderStatus = orderStatus;
         this.totalAmount = totalAmount;
         this.specialInstructions = specialInstructions;
+        this.items = new ArrayList<>();
     }
 
-    public Long getId() {
-        return id;
-    }
+    // ── Getters & Setters ────────────────────────────────────────────────────
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public UUID getPublicId() { return publicId; }
+    public void setPublicId(UUID publicId) { this.publicId = publicId; }
 
-    public UUID getPublicId() {
-        return publicId;
-    }
+    public Long getBusinessId() { return businessId; }
+    public void setBusinessId(Long businessId) { this.businessId = businessId; }
 
-    public void setPublicId(UUID publicId) {
-        this.publicId = publicId;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public Long getBusinessId() {
-        return businessId;
-    }
+    public List<OrderItem> getItems() { return items; }
+    public void setItems(List<OrderItem> items) { this.items = items; }
 
-    public void setBusinessId(Long businessId) {
-        this.businessId = businessId;
-    }
+    public Address getAddress() { return address; }
+    public void setAddress(Address address) { this.address = address; }
 
-    public User getUser() {
-        return user;
-    }
+    public LocalDateTime getPickupTime() { return pickupTime; }
+    public void setPickupTime(LocalDateTime pickupTime) { this.pickupTime = pickupTime; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public OrderStatus getOrderStatus() { return orderStatus; }
+    public void setOrderStatus(OrderStatus orderStatus) { this.orderStatus = orderStatus; }
 
-    public ServiceType getServiceType() {
-        return serviceType;
-    }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
-    public void setServiceType(ServiceType serviceType) {
-        this.serviceType = serviceType;
-    }
+    public String getSpecialInstructions() { return specialInstructions; }
+    public void setSpecialInstructions(String specialInstructions) { this.specialInstructions = specialInstructions; }
 
-    public Address getAddress() {
-        return address;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public LocalDateTime getPickupTime() {
-        return pickupTime;
-    }
-
-    public void setPickupTime(LocalDateTime pickupTime) {
-        this.pickupTime = pickupTime;
-    }
-
-    public OrderStatus getOrderStatus() {
-        return orderStatus;
-    }
-
-    public void setOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public String getSpecialInstructions() {
-        return specialInstructions;
-    }
-
-    public void setSpecialInstructions(String specialInstructions) {
-        this.specialInstructions = specialInstructions;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

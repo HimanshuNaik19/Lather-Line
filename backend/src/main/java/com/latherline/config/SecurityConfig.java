@@ -42,6 +42,7 @@ public class SecurityConfig {
             "/api/businesses",     // store selector
             "/api/services",       // anyone can browse service types
             "/api/chat",           // chatbot open to all
+            "/ws/**",              // websocket connections
             "/actuator/health",
             "/v3/api-docs/**",
             "/swagger-ui/**"
@@ -107,6 +108,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/ws/**", config);
         return source;
     }
 }

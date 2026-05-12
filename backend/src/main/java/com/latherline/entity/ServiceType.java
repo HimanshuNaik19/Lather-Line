@@ -28,6 +28,12 @@ public class ServiceType {
     @Column(length = 500)
     private String description;
 
+    @Column(nullable = false, length = 10)
+    private String unit = "KG";  // 'KG' = per kilogram, 'PIECE' = per garment
+
+    @Column(name = "turnaround_hours")
+    private Integer turnaroundHours;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
@@ -36,11 +42,13 @@ public class ServiceType {
         
     }
 
-    public ServiceType(Long businessId, String name, BigDecimal pricePerUnit, String description, Boolean active) {
+    public ServiceType(Long businessId, String name, BigDecimal pricePerUnit, String description, String unit, Integer turnaroundHours, Boolean active) {
         this.businessId = businessId;
         this.name = name;
         this.pricePerUnit = pricePerUnit;
         this.description = description;
+        this.unit = unit != null ? unit : "KG";
+        this.turnaroundHours = turnaroundHours;
         this.active = active;
     }
 
@@ -82,6 +90,22 @@ public class ServiceType {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public Integer getTurnaroundHours() {
+        return turnaroundHours;
+    }
+
+    public void setTurnaroundHours(Integer turnaroundHours) {
+        this.turnaroundHours = turnaroundHours;
     }
 
     public Boolean getActive() {

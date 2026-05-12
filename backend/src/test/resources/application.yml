@@ -6,14 +6,18 @@ spring:
     username: sa
     password: ""
 
+  flyway:
+    baseline-on-migrate: true
+
   jpa:
+    open-in-view: false
     hibernate:
-      # fresh schema on every test run; safe because H2 is in-memory
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: false
+        tenant_identifier_resolver: com.latherline.config.tenant.TenantIdentifierResolver
 
   h2:
     console:

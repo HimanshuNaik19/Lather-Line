@@ -18,9 +18,10 @@ export default function AdminOrdersPage() {
     const q = query.trim().toLowerCase();
     return (orders ?? []).filter((order) => {
       const statusMatch = status === 'ALL' || order.orderStatus === status;
+      const itemNames = order.items.map(i => i.serviceName).join(' ');
       const queryMatch =
         !q ||
-        order.serviceTypeName.toLowerCase().includes(q) ||
+        itemNames.toLowerCase().includes(q) ||
         order.addressCity.toLowerCase().includes(q) ||
         order.publicId.toLowerCase().includes(q);
       return statusMatch && queryMatch;
@@ -79,8 +80,10 @@ export default function AdminOrdersPage() {
                 <p className="text-gray-400 text-sm truncate">{order.addressCity}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-lg">Service</p>
-                <p className="font-semibold text-sm">{order.serviceTypeName}</p>
+                <p className="text-gray-400 text-lg">Services</p>
+                <p className="font-semibold text-sm">
+                  {order.items.map(i => `${i.serviceName}(${i.quantity}${i.unit === 'KG' ? 'kg' : 'pc'})`).join(', ')}
+                </p>
               </div>
               <div>
                 <p className="text-gray-400 text-lg">Status</p>
