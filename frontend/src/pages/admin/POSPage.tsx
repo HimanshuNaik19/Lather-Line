@@ -42,9 +42,15 @@ export default function POSPage() {
     setCart(prev => prev.map(i => {
       if (i.service.id !== id) return i;
       const step = i.service.unit === 'KG' ? 0.5 : 1;
-      const n = +(i.quantity + delta * step).toFixed(1);
+      const n = +(i.quantity + delta * step).toFixed(2);
       return n <= 0 ? i : { ...i, quantity: n };
     }));
+  };
+
+  const setExactQty = (id: number, value: string) => {
+    const n = parseFloat(value);
+    if (isNaN(n) || n <= 0) return;
+    setCart(prev => prev.map(i => i.service.id === id ? { ...i, quantity: n } : i));
   };
 
   const setLabel = (id: number, label: string) =>
@@ -171,13 +177,23 @@ export default function POSPage() {
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => updateQty(item.service.id, -1)} className="w-7 h-7 rounded-lg bg-surface-border flex items-center justify-center">
+                      <button onClick={() => updateQty(item.service.id, -1)} className="w-7 h-7 rounded-lg bg-surface-border flex items-center justify-center shrink-0">
                         <Minus size={12} />
                       </button>
-                      <span className="w-14 text-center text-sm font-medium">
-                        {item.quantity}{item.service.unit === 'KG' ? 'kg' : 'pc'}
-                      </span>
-                      <button onClick={() => updateQty(item.service.id, 1)} className="w-7 h-7 rounded-lg bg-surface-border flex items-center justify-center">
+                      <div className="flex items-center bg-surface-dark border border-surface-border rounded-lg px-2 w-20">
+                        <input
+                          type="number"
+                          step={item.service.unit === 'KG' ? "0.1" : "1"}
+                          min="0.1"
+                          value={item.quantity}
+                          onChange={(e) => setExactQty(item.service.id, e.target.value)}
+                          className="w-full bg-transparent text-center text-sm font-medium focus:outline-none hide-spinners py-1"
+                        />
+                        <span className="text-xs text-gray-500 font-medium ml-1">
+                          {item.service.unit === 'KG' ? 'kg' : 'pc'}
+                        </span>
+                      </div>
+                      <button onClick={() => updateQty(item.service.id, 1)} className="w-7 h-7 rounded-lg bg-surface-border flex items-center justify-center shrink-0">
                         <Plus size={12} />
                       </button>
                       <span className="ml-auto text-brand-400 text-sm font-semibold">

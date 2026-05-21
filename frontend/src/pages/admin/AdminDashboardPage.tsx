@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, IndianRupee, Loader2, Package, Users } from 'lucide-react';
-import { useAllOrders } from '@/hooks/useOrders';
+import { useAllOrdersPage } from '@/hooks/useOrders';
 import type { Order } from '@/types';
 import { formatOrderRef } from '@/utils/orderRef';
 
@@ -12,20 +12,24 @@ function classNames(...classes: string[]) {
 
 export default function AdminDashboardPage() {
   const [page, setPage] = useState(0);
-  const { data: allOrders = [], isLoading } = useAllOrders();
+  const { data, isLoading, isFetching } = useAllOrdersPage(page, PAGE_SIZE);
 
   if (isLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 size={40} className="text-brand-500 animate-spin" /></div>;
   }
 
-  const totalOrders = allOrders.length;
-  const totalRevenue = allOrders.filter(o => o.orderStatus === 'DELIVERED').reduce((acc, o) => acc + o.totalAmount, 0);
-  const pendingCount = allOrders.filter(o => o.orderStatus === 'PENDING').length;
-  const inProgressCount = allOrders.filter(o => o.orderStatus === 'IN_PROGRESS' || o.orderStatus === 'PICKED_UP').length;
-
-  const totalPages = Math.ceil(allOrders.length / PAGE_SIZE) || 1;
-  const currentPage = Math.min(page, totalPages - 1);
-  const orders = allOrders.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  const orders = data?.content ?? [];
+  const totalOrders = data?.totalElements ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+  const currentPage = data?.number ?? 0;
+  
+  // NOTE: Revenue and counts here reflect the CURRENT PAGE only, 
+  // as the backend doesn't have a dedicated /stats endpoint yet.
+  const totalRevenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
+  const pendingCount = orders.filter((order) => order.orderStatus === 'PENDING').length;
+  const inProgressCount = orders.filter((order) => order.orderStatus === 'IN_PROGRESS' || order.orderStatus === 'PICKED_UP').length;
+  const hasPrev = currentPage > 0;
+  const hasNext = currentPage < totalPages - 1;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -38,9 +42,9 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Revenue', value: `₹${totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-400/10' },
-          { label: 'Pending', value: pendingCount, icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
-          { label: 'In Progress', value: inProgressCount, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+          { label: 'Visible Revenue', value: `₹${totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-400/10' },
+          { label: 'Pending on Page', value: pendingCount, icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+          { label: 'In Progress on Page', value: inProgressCount, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
           { label: 'Total Orders', value: totalOrders, icon: Package, color: 'text-brand-400', bg: 'bg-brand-400/10' },
         ].map((stat, index) => {
           const Icon = stat.icon;
@@ -60,7 +64,7 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="mt-8 bg-surface-dark border border-surface-border rounded-2xl overflow-hidden">
+      <div className={`mt-8 bg-surface-dark border border-surface-border rounded-2xl overflow-hidden transition-opacity ${isFetching ? 'opacity-70' : 'opacity-100'}`}>
         <div className="px-6 py-5 border-b border-surface-border flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Recent Store Orders</h2>
@@ -68,15 +72,15 @@ export default function AdminDashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setPage(p => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
+              onClick={() => setPage((value) => Math.max(0, value - 1))}
+              disabled={!hasPrev || isFetching}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-border text-sm text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={16} /> Previous
             </button>
             <button
-              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage >= totalPages - 1}
+              onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
+              disabled={!hasNext || isFetching}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-border text-sm text-gray-300 hover:border-brand-500/50 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next <ChevronRight size={16} />
@@ -112,3 +116,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+

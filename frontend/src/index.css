@@ -26,4 +26,42 @@
 
 @layer utilities {
   .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  
+  /* Hide arrows on number inputs */
+  .hide-spinners::-webkit-inner-spin-button,
+  .hide-spinners::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .hide-spinners {
+    -moz-appearance: textfield;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  /* Hide navbars, sidebars, header bars, and buttons during printing */
+  nav, header, aside, button, .no-print {
+    display: none !important;
+  }
+  /* Force dark elements to white background for printing */
+  .bg-surface-dark {
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+  .text-white {
+    color: black !important;
+  }
+  .text-gray-400 {
+    color: #444 !important;
+  }
+  .text-brand-400, .text-brand-300 {
+    color: #000 !important;
+    font-weight: bold;
+  }
 }

@@ -123,9 +123,9 @@ export default function AdminOrderDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-surface-dark border border-surface-border rounded-2xl p-6 space-y-3">
+          <div className="bg-surface-dark border border-surface-border rounded-2xl p-6 space-y-3 no-print">
             <h2 className="font-semibold text-base">Quick Actions</h2>
-            <button className="w-full py-3 rounded-lg border border-surface-border text-xl">Print Receipt</button>
+            <button onClick={() => window.print()} className="w-full py-3 rounded-lg border border-surface-border hover:bg-surface-border transition-colors text-xl">Print Receipt</button>
             <button className="w-full py-3 rounded-lg border border-surface-border text-xl">Send WhatsApp Reminder</button>
           </div>
         </div>

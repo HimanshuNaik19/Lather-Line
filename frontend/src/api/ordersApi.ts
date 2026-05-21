@@ -35,4 +35,8 @@ export const ordersApi = {
   // Update status
   updateStatus: (publicId: string, data: StatusUpdateRequest) =>
     axiosClient.patch<Order>(`/orders/${publicId}/status`, data).then(r => r.data),
+
+  // Staff: delete order
+  deleteOrder: (publicId: string) =>
+    axiosClient.delete(`/orders/${publicId}`).then(r => r.data),
 };

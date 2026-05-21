@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useAllOrders } from '@/hooks/useOrders';
+import { useAllOrders, useDeleteOrder } from '@/hooks/useOrders';
 import type { OrderStatus } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatOrderRef } from '@/utils/orderRef';
@@ -11,6 +11,7 @@ const STATUSES: Array<'ALL' | OrderStatus> = ['ALL', 'PENDING', 'PICKED_UP', 'IN
 
 export default function AdminOrdersPage() {
   const { data: orders, isLoading, error } = useAllOrders();
+  const deleteOrder = useDeleteOrder();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'ALL' | OrderStatus>('ALL');
 
@@ -95,7 +96,17 @@ export default function AdminOrdersPage() {
                 <p className="text-gray-400 text-sm">{format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm')}</p>
               </div>
               <div className="flex justify-end text-gray-500">
-                <Trash2 size={22} />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (window.confirm('Are you sure you want to delete this order?')) {
+                      deleteOrder.mutate(order.publicId);
+                    }
+                  }}
+                  className="hover:text-red-400 p-2 rounded-full hover:bg-red-500/10 transition-colors"
+                >
+                  <Trash2 size={22} />
+                </button>
               </div>
             </div>
           </Link>

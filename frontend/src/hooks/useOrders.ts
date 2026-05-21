@@ -15,6 +15,13 @@ export function useMyOrders() {
   return useQuery({ queryKey: ORDER_KEYS.mine, queryFn: ordersApi.getMyOrders });
 }
 
+export function useMyOrdersPage(page: number, size: number) {
+  return useQuery({
+    queryKey: [...ORDER_KEYS.mine, 'paged', page, size],
+    queryFn: () => ordersApi.getMyOrdersPaged(page, size),
+  });
+}
+
 export function useCreateOrder() {
   const qc = useQueryClient();
   return useMutation({
@@ -26,6 +33,13 @@ export function useCreateOrder() {
 // ── Staff hooks (Admin / Manager / Washer) ────────────────────────────────────
 export function useAllOrders() {
   return useQuery({ queryKey: ORDER_KEYS.staff, queryFn: ordersApi.getAllOrders });
+}
+
+export function useAllOrdersPage(page: number, size: number) {
+  return useQuery({
+    queryKey: [...ORDER_KEYS.staff, 'paged', page, size],
+    queryFn: () => ordersApi.getAllOrdersPaged(page, size),
+  });
 }
 
 export function useActiveOrders() {
@@ -45,6 +59,14 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data: StatusUpdateRequest }) =>
       ordersApi.updateStatus(publicId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
+  });
+}
+
+export function useDeleteOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (publicId: string) => ordersApi.deleteOrder(publicId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
   });
 }

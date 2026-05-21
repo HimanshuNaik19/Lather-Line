@@ -81,7 +81,7 @@ public class OrderService {
                 .orElseGet(() -> {
                     User u = new User();
                     u.setBusinessId(tenantId);
-                    u.setEmail(request.getCustomerPhone() + "@walkin.local");
+                    u.setEmail(request.getCustomerPhone() + ".b" + tenantId + "@walkin.local");
                     u.setFullName(request.getCustomerName());
                     u.setPhone(request.getCustomerPhone());
                     u.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
@@ -157,7 +157,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderDto.OrderResponse> getActiveOrders() {
         return orderRepository.findByOrderStatusIn(
-                List.of(OrderStatus.PICKED_UP, OrderStatus.IN_PROGRESS)
+                List.of(OrderStatus.PENDING, OrderStatus.PICKED_UP, OrderStatus.IN_PROGRESS, OrderStatus.READY)
         ).stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -182,10 +182,17 @@ public class OrderService {
         return response;
     }
 
+    // ── Delete Order (Admin / Manager) ────────────────────────────────────────
+    @Transactional
+    public void deleteOrder(UUID publicId) {
+        Order order = findByPublicIdOrThrow(publicId);
+        orderRepository.delete(order);
+    }
+
     // ── Internal helpers ──────────────────────────────────────────────────────
     private void broadcastOrderUpdate(Order order, OrderDto.OrderResponse response) {
         String topic = "/topic/tenant/" + order.getBusinessId() + "/orders";
-        messagingTemplate.convertAndSend(topic, response);
+        messagingTemplate.convertAndSend(topic, java.util.Map.of("status", "updated", "publicId", order.getPublicId()));
     }
 
     private Order findByPublicIdOrThrow(UUID publicId) {

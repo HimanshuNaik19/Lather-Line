@@ -83,6 +83,7 @@ public class OrderController {
 
     // ── Shared: single order by publicId ─────────────────────────────────────
     @GetMapping("/{publicId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto.OrderResponse> getOrder(
             @PathVariable UUID publicId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -98,5 +99,13 @@ public class OrderController {
             @PathVariable UUID publicId,
             @Valid @RequestBody OrderDto.StatusUpdateRequest request) {
         return ResponseEntity.ok(orderService.updateStatus(publicId, request.getOrderStatus()));
+    }
+
+    // ── Staff: delete order ───────────────────────────────────────────────────
+    @DeleteMapping("/{publicId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> deleteOrder(@PathVariable UUID publicId) {
+        orderService.deleteOrder(publicId);
+        return ResponseEntity.noContent().build();
     }
 }
