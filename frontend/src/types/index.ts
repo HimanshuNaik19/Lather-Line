@@ -7,6 +7,12 @@ export type OrderStatus =
   | 'DELIVERED'
   | 'CANCELLED';
 
+export type PaymentStatus = 
+  | 'PENDING'
+  | 'PAID'
+  | 'FAILED'
+  | 'REFUNDED';
+
 // Pricing unit for a service
 export type ServiceUnit = 'KG' | 'PIECE';
 
@@ -66,6 +72,7 @@ export interface Order {
   addressStreet?: string;
   pickupTime: string;          // ISO-8601
   orderStatus: OrderStatus;
+  paymentStatus: PaymentStatus;
   totalAmount: number;
   specialInstructions?: string;
   createdAt: string;           // ISO-8601

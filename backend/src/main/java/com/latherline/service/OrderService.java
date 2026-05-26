@@ -39,6 +39,7 @@ public class OrderService {
     @Autowired private AddressRepository addressRepository;
     @Autowired private SimpMessagingTemplate messagingTemplate;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private com.latherline.service.notification.NotificationService notificationService;
 
     // ── Create online order (customer) ────────────────────────────────────────
     @Transactional
@@ -179,6 +180,12 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         OrderDto.OrderResponse response = toResponse(saved);
         broadcastOrderUpdate(saved, response);
+
+        // Send notifications
+        if (newStatus == OrderStatus.READY || newStatus == OrderStatus.DELIVERED) {
+            notificationService.sendOrderStatusNotification(saved);
+        }
+
         return response;
     }
 
@@ -209,6 +216,7 @@ public class OrderService {
         r.setAddressStreet(order.getAddress().getStreet());
         r.setPickupTime(order.getPickupTime());
         r.setOrderStatus(order.getOrderStatus());
+        r.setPaymentStatus(order.getPaymentStatus());
         r.setTotalAmount(order.getTotalAmount());
         r.setSpecialInstructions(order.getSpecialInstructions());
         r.setCreatedAt(order.getCreatedAt());

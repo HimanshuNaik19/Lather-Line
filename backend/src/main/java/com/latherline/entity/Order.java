@@ -1,6 +1,7 @@
 package com.latherline.entity;
 
 import com.latherline.enums.OrderStatus;
+import com.latherline.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -59,6 +60,14 @@ public class Order {
     @Builder.Default
     private OrderStatus orderStatus = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false, length = 20)
+    @Builder.Default
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    @Column(name = "stripe_session_id", length = 255)
+    private String stripeSessionId;
+
     /** Server-computed sum of all order_items.subtotal — never trusted from frontend */
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -90,6 +99,7 @@ public class Order {
         this.orderStatus = orderStatus;
         this.totalAmount = totalAmount;
         this.specialInstructions = specialInstructions;
+        this.paymentStatus = PaymentStatus.PENDING;
         this.items = new ArrayList<>();
     }
 
@@ -117,6 +127,12 @@ public class Order {
 
     public OrderStatus getOrderStatus() { return orderStatus; }
     public void setOrderStatus(OrderStatus orderStatus) { this.orderStatus = orderStatus; }
+
+    public PaymentStatus getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getStripeSessionId() { return stripeSessionId; }
+    public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }

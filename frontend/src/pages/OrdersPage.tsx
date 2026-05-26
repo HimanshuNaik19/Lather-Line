@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Package, Plus } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Package, Plus, CreditCard } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PaymentBadge } from '@/components/PaymentBadge';
 import { useMyOrdersPage } from '@/hooks/useOrders';
+import { useCheckoutSession } from '@/hooks/usePayment';
 import { formatOrderRef } from '@/utils/orderRef';
 
 const PAGE_SIZE = 8;
@@ -11,6 +13,7 @@ const PAGE_SIZE = 8;
 export default function OrdersPage() {
   const [page, setPage] = useState(0);
   const { data, isLoading, error, isFetching } = useMyOrdersPage(page, PAGE_SIZE);
+  const checkoutMutation = useCheckoutSession();
 
   const orders = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -79,6 +82,7 @@ export default function OrdersPage() {
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <p className="font-semibold text-white">Order #{formatOrderRef(order.publicId)}</p>
                       <StatusBadge status={order.orderStatus} />
+                      <PaymentBadge status={order.paymentStatus} />
                     </div>
                     <p className="text-sm text-gray-300">
                       {order.items.map(i => `${i.serviceName} (${i.quantity}${i.unit === 'KG' ? 'kg' : 'pcs'})`).join(' + ')}
@@ -91,6 +95,20 @@ export default function OrdersPage() {
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <p className="text-brand-400 font-bold text-lg">Rs {order.totalAmount}</p>
                     <p className="text-xs text-gray-500">Placed {format(new Date(order.createdAt), 'dd MMM')}</p>
+                    {order.paymentStatus === 'PENDING' && (
+                      <button
+                        onClick={() => checkoutMutation.mutate(order.publicId)}
+                        disabled={checkoutMutation.isPending}
+                        className="mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                      >
+                        {checkoutMutation.isPending && checkoutMutation.variables === order.publicId ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <CreditCard size={14} />
+                        )}
+                        Pay Online
+                      </button>
+                    )}
                   </div>
                 </div>
 

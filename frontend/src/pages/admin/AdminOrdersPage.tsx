@@ -5,13 +5,16 @@ import { useMemo, useState } from 'react';
 import { useAllOrders, useDeleteOrder } from '@/hooks/useOrders';
 import type { OrderStatus } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PaymentBadge } from '@/components/PaymentBadge';
 import { formatOrderRef } from '@/utils/orderRef';
+import { useMarkAsPaid } from '@/hooks/usePayment';
 
 const STATUSES: Array<'ALL' | OrderStatus> = ['ALL', 'PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'];
 
 export default function AdminOrdersPage() {
   const { data: orders, isLoading, error } = useAllOrders();
   const deleteOrder = useDeleteOrder();
+  const markAsPaid = useMarkAsPaid();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'ALL' | OrderStatus>('ALL');
 
@@ -36,7 +39,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-lg font-display font-bold leading-none">Orders</h1>
           <p className="text-gray-400 mt-2 text-sm">Manage all laundry and dry-cleaning orders.</p>
         </div>
-        <Link to="/orders/new" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-brand-gradient font-semibold text-xl">
+        <Link to="/admin/pos" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-brand-gradient font-semibold text-xl">
           <Plus size={20} /> New Order
         </Link>
       </div>
@@ -88,14 +91,36 @@ export default function AdminOrdersPage() {
               </div>
               <div>
                 <p className="text-gray-400 text-lg">Status</p>
-                <StatusBadge status={order.orderStatus} />
+                <div className="flex gap-2">
+                  <StatusBadge status={order.orderStatus} />
+                  <PaymentBadge status={order.paymentStatus} />
+                </div>
               </div>
               <div>
                 <p className="text-gray-400 text-lg">Total & Date</p>
                 <p className="text-brand-400 font-bold text-sm">Rs {order.totalAmount}</p>
                 <p className="text-gray-400 text-sm">{format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm')}</p>
               </div>
-              <div className="flex justify-end text-gray-500">
+              <div className="flex justify-end items-center gap-3 text-gray-500">
+                {order.paymentStatus === 'PENDING' && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (window.confirm('Mark this order as paid by cash?')) {
+                        markAsPaid.mutate(order.publicId);
+                      }
+                    }}
+                    disabled={markAsPaid.isPending}
+                    className="hover:text-emerald-400 p-2 rounded-full hover:bg-emerald-500/10 transition-colors"
+                    title="Mark as Paid (Cash)"
+                  >
+                    {markAsPaid.isPending && markAsPaid.variables === order.publicId ? (
+                      <Loader2 size={22} className="animate-spin" />
+                    ) : (
+                      <span className="text-sm font-bold border border-current px-2 py-0.5 rounded-lg">₹</span>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -104,6 +129,7 @@ export default function AdminOrdersPage() {
                     }
                   }}
                   className="hover:text-red-400 p-2 rounded-full hover:bg-red-500/10 transition-colors"
+                  title="Delete Order"
                 >
                   <Trash2 size={22} />
                 </button>

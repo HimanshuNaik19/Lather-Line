@@ -1,6 +1,7 @@
 package com.latherline.dto;
 
 import com.latherline.enums.OrderStatus;
+import com.latherline.enums.PaymentStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -97,6 +98,7 @@ public class OrderDto {
         private String addressStreet;
         private LocalDateTime pickupTime;
         private OrderStatus orderStatus;
+        private PaymentStatus paymentStatus;
         private BigDecimal totalAmount;
         private String specialInstructions;
         private LocalDateTime createdAt;
