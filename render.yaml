@@ -25,6 +25,10 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      - key: JWT_COOKIE_SECURE
+        value: "true"
+      - key: JWT_COOKIE_SAME_SITE
+        value: None
     healthCheckPath: /actuator/health
 
   # Frontend React/Vite App
