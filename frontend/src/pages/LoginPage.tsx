@@ -43,7 +43,7 @@ export default function LoginPage() {
             <Shirt size={26} className="text-white" />
           </div>
           <h1 className="font-display font-bold text-2xl text-white">Welcome back</h1>
-          <p className="text-gray-400 text-sm mt-1">Sign in to your Lather &amp; Line account</p>
+          <p className="text-gray-400 text-sm mt-1">Sign in to your Lather & Line account</p>
         </div>
 
         <form
@@ -62,10 +62,11 @@ export default function LoginPage() {
               id="login-email"
               type="email"
               required
+              autoComplete="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="you@example.com"
-              className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 transition-colors"
+              className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 transition-colors"
             />
           </div>
 
@@ -76,10 +77,11 @@ export default function LoginPage() {
                 id="login-password"
                 type={showPass ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 pr-11 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-3 pr-11 text-white placeholder-gray-500 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 transition-colors"
               />
               <button
                 type="button"

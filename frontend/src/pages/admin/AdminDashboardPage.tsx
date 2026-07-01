@@ -2,9 +2,10 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { IndianRupee, Package, Clock, CheckCircle2, XCircle, Loader2, TrendingUp } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useAnalytics';
+import { useProfitabilityReport } from '@/hooks/useExpenses';
 import { format } from 'date-fns';
+import { IndianRupee, Package, Clock, CheckCircle2, XCircle, Loader2, TrendingUp } from 'lucide-react';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const BRAND      = '#818cf8'; // indigo
@@ -78,9 +79,9 @@ function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
   const { data: stats, isLoading, error } = useDashboardStats();
+  const { data: profitReport } = useProfitabilityReport();
 
   if (isLoading) {
     return (
@@ -159,6 +160,34 @@ export default function AdminDashboardPage() {
           sub="Being processed"
         />
       </div>
+
+      {/* ── Profitability Widget ── */}
+      {profitReport && (
+        <div className="bg-surface-dark border border-brand-500/30 rounded-2xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
+          <SectionHeader title="Financial Overview" sub="Real-time profitability margin" />
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p className="text-gray-400 text-sm mb-1">Gross Revenue</p>
+              <p className="text-xl font-bold font-mono text-green-400">{currency(profitReport.totalRevenue)}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm mb-1">Cost of Goods (COGS)</p>
+              <p className="text-xl font-bold font-mono text-yellow-400">- {currency(profitReport.totalCogs)}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm mb-1">Expenses</p>
+              <p className="text-xl font-bold font-mono text-red-400">- {currency(profitReport.totalOperatingExpenses)}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm mb-1">Net Profit Margin</p>
+              <p className={`text-2xl font-bold font-mono ${profitReport.profitMarginPercentage > 0 ? 'text-brand-400' : 'text-red-400'}`}>
+                {profitReport.profitMarginPercentage.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Revenue Chart (Area) ── */}
       <div className="bg-surface-dark border border-surface-border rounded-2xl overflow-hidden">

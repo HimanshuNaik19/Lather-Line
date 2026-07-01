@@ -88,13 +88,13 @@ public class OrderController {
             @PathVariable UUID publicId,
             @AuthenticationPrincipal UserDetails userDetails) {
         boolean isStaff = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().matches("ROLE_ADMIN|ROLE_MANAGER|ROLE_WASHER"));
+                .anyMatch(a -> a.getAuthority().matches("ROLE_ADMIN|ROLE_MANAGER|ROLE_WASHER|ROLE_DRIVER"));
         return ResponseEntity.ok(orderService.getOrderByPublicId(publicId, userDetails.getUsername(), isStaff));
     }
 
     // ── Staff: update order status ────────────────────────────────────────────
     @PatchMapping("/{publicId}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'WASHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'WASHER', 'DRIVER')")
     public ResponseEntity<OrderDto.OrderResponse> updateStatus(
             @PathVariable UUID publicId,
             @Valid @RequestBody OrderDto.StatusUpdateRequest request) {

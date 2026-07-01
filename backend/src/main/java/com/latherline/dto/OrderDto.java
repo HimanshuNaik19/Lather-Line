@@ -2,6 +2,7 @@ package com.latherline.dto;
 
 import com.latherline.enums.OrderStatus;
 import com.latherline.enums.PaymentStatus;
+import com.latherline.enums.PaymentMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -54,6 +55,10 @@ public class OrderDto {
         private List<OrderItemRequest> items;
 
         private String specialInstructions;
+        
+        private String couponCode;
+
+        private PaymentMethod paymentMethod;
     }
 
     // ── Customer online order request ─────────────────────────────────────────
@@ -78,6 +83,11 @@ public class OrderDto {
         private LocalDateTime pickupTime;
 
         private String specialInstructions;
+        
+        private String couponCode;
+
+        @NotNull(message = "Payment method is required")
+        private PaymentMethod paymentMethod;
     }
 
     // ── Status update ─────────────────────────────────────────────────────────
@@ -99,8 +109,17 @@ public class OrderDto {
         private LocalDateTime pickupTime;
         private OrderStatus orderStatus;
         private PaymentStatus paymentStatus;
+        private PaymentMethod paymentMethod;
+        private String razorpayOrderId;
+        private BigDecimal subtotalAmount;
+        private BigDecimal discountAmount;
         private BigDecimal totalAmount;
+        private String couponCode;
         private String specialInstructions;
         private LocalDateTime createdAt;
+        private String driverName;
+        private Long driverId;
+        private Double addressLatitude;
+        private Double addressLongitude;
     }
 }

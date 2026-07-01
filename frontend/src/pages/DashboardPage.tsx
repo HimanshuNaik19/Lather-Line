@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyOrders } from '@/hooks/useOrders';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Package, Plus, Clock, TrendingUp, CheckCircle2, Loader2 } from 'lucide-react';
+import { SkeletonList } from '@/components/LoadingSkeleton';
+import { Package, Plus, Clock, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatOrderRef } from '@/utils/orderRef';
 
@@ -25,7 +26,7 @@ export default function DashboardPage() {
             <h1 className="font-display font-bold text-3xl">
               Good day, {user?.fullName?.split(' ')[0]}
             </h1>
-            <p className="text-gray-400 mt-1">Here&apos;s your laundry overview</p>
+            <p className="text-gray-400 mt-1">Here's your laundry overview</p>
           </div>
           <Link
             to="/orders/new"
@@ -64,9 +65,7 @@ export default function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 size={28} className="animate-spin text-brand-400" />
-            </div>
+            <SkeletonList count={3} />
           ) : recentOrders.length === 0 ? (
             <div className="text-center py-12">
               <Package size={40} className="text-gray-600 mx-auto mb-3" />
@@ -78,7 +77,8 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {recentOrders.map((order) => (
-                <div
+                <Link
+                  to={`/orders`}
                   key={order.publicId}
                   className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-surface-input border border-surface-border hover:border-brand-500/40 transition-colors"
                 >
@@ -92,9 +92,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <StatusBadge status={order.orderStatus} />
-                    <p className="text-brand-400 font-semibold text-sm">Rs {order.totalAmount}</p>
+                    <p className="text-brand-400 font-semibold text-sm">₹{order.totalAmount}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

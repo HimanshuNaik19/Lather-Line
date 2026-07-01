@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyOrders } from '@/hooks/useOrders';
+import { useMySubscription } from '@/hooks/useMarketing';
 import {
   User, Mail, Phone, Shield, Calendar, Package,
-  CheckCircle2, Clock, Edit3, Save, X, Camera,
+  CheckCircle2, Clock, Edit3, Save, X, Camera, Zap
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { format } from 'date-fns';
@@ -12,6 +13,7 @@ import { formatOrderRef } from '@/utils/orderRef';
 export default function AccountPage() {
   const { user } = useAuth();
   const { data: orders, isLoading: ordersLoading } = useMyOrders();
+  const { data: subscription } = useMySubscription();
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName ?? '');
@@ -102,6 +104,28 @@ export default function AccountPage() {
             </div>
           )}
         </div>
+
+        {subscription && subscription.status === 'ACTIVE' && (
+          <div className="bg-brand-500/10 border border-brand-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 animate-slide-up">
+            <div className="w-12 h-12 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
+              <Zap size={24} className="text-brand-400" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-semibold text-brand-400 text-lg">Active Subscription: {subscription.plan.name}</h3>
+              <p className="text-sm text-brand-300/80">Valid until {format(new Date(subscription.currentPeriodEnd), 'dd MMM yyyy')}</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="text-center bg-surface-card border border-brand-500/20 rounded-xl px-4 py-2">
+                <span className="block text-2xl font-bold text-white">{subscription.remainingKg}</span>
+                <span className="text-xs text-gray-400">KG left</span>
+              </div>
+              <div className="text-center bg-surface-card border border-brand-500/20 rounded-xl px-4 py-2">
+                <span className="block text-2xl font-bold text-white">{subscription.remainingPieces}</span>
+                <span className="text-xs text-gray-400">Pcs left</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card-gradient border border-surface-border rounded-2xl p-6 animate-slide-up">
           <h3 className="font-display font-semibold text-lg mb-5 flex items-center gap-2">

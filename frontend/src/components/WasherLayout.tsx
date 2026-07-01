@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Store, User, LogOut, Waves } from 'lucide-react';
+import { ShoppingBag, Store, User, LogOut, Waves, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const links = [
@@ -11,13 +12,14 @@ const links = [
 export default function WasherLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
   return (
-    <div className="flex min-h-screen bg-surface text-white">
-      {/* Sidebar */}
-      <aside className="w-60 shrink-0 bg-surface-dark border-r border-surface-border flex flex-col">
+    <div className="flex flex-col md:flex-row min-h-screen bg-surface text-white">
+      {/* Desktop Sidebar */}
+      <aside className="w-60 shrink-0 bg-surface-dark border-r border-surface-border hidden md:flex flex-col">
         <div className="px-6 py-6 flex items-center gap-2.5 border-b border-surface-border">
           <div className="w-8 h-8 rounded-xl bg-brand-gradient flex items-center justify-center">
             <Waves size={16} className="text-white" />
@@ -54,8 +56,69 @@ export default function WasherLayout() {
         </div>
       </aside>
 
+      {/* Mobile Header */}
+      <header className="h-16 bg-surface-dark border-b border-surface-border flex items-center justify-between px-4 md:hidden">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setMobileOpen(true)} className="text-gray-400 hover:text-white">
+            <Menu size={24} />
+          </button>
+          <div className="flex flex-col">
+            <span className="font-display font-bold text-sm">Lather & Line</span>
+            <span className="text-xs text-brand-400">Washer</span>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="text-gray-400 hover:text-white">
+          <LogOut size={20} />
+        </button>
+      </header>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-64 bg-surface-dark border-r border-surface-border flex flex-col animate-slide-in-right h-full">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-surface-border">
+              <span className="font-display font-bold text-lg text-white">Washer Portal</span>
+              <button onClick={() => setMobileOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+              {links.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-brand-500/15 text-brand-300 border border-brand-500/20'
+                        : 'text-gray-400 hover:text-white hover:bg-surface-card'
+                    }`
+                  }
+                >
+                  <Icon size={17} />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+
+            <div className="p-4 border-t border-surface-border">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium border border-transparent hover:border-red-500/20"
+              >
+                <LogOut size={20} />
+                Sign Out
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main */}
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-auto h-[calc(100vh-4rem)] md:h-screen">
         <Outlet />
       </main>
     </div>

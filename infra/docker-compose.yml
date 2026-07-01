@@ -32,6 +32,12 @@ services:
       DB_USER: latherline
       DB_PASSWORD: latherline_pass
       JWT_SECRET: lather-and-line-super-secret-jwt-key-change-me
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-ac9754001@smtp-brevo.com}
+      SMTP_PASS: ${SMTP_PASS:-9MOHAkmLVgwnZ47I}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-rzp_test_SuKl1FFWE6jEyT}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-d8ZN89H7VhEcARG4lnWLgxF1}
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,6 +52,30 @@ services:
   #   volumes:
   #     - redis_data:/data
 
+  # ── Monitoring & Analytics ──────────────────────────────────────────────────
+  prometheus:
+    build: ./prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
-  # redis_data:
+  prometheus_data:
+  grafana_data:

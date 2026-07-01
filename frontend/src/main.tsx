@@ -6,14 +6,18 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Loader2 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { Navbar } from '@/components/Navbar';
 import { Chatbot } from '@/components/Chatbot';
 import { OrderWebSocket } from '@/components/OrderWebSocket';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 // Layouts
 import AdminLayout from '@/components/AdminLayout';
 import WasherLayout from '@/components/WasherLayout';
 import ManagerLayout from '@/components/ManagerLayout';
+import { DriverLayout } from '@/components/DriverLayout';
 
 // Customer pages
 import HomePage from '@/pages/HomePage';
@@ -24,20 +28,32 @@ import OrdersPage from '@/pages/OrdersPage';
 import NewOrderPage from '@/pages/NewOrderPage';
 import AccountPage from '@/pages/AccountPage';
 import SettingsPage from '@/pages/SettingsPage';
+import SubscriptionsPage from '@/pages/SubscriptionsPage';
 
 // Admin pages
-import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
-import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
-import AdminOrderDetailsPage from '@/pages/admin/AdminOrderDetailsPage';
-import AdminServicesPage from '@/pages/admin/AdminServicesPage';
-import POSPage from '@/pages/admin/POSPage';
+const AdminDashboardPage = React.lazy(() => import('@/pages/admin/AdminDashboardPage'));
+const AdminOrdersPage = React.lazy(() => import('@/pages/admin/AdminOrdersPage'));
+const AdminOrderDetailsPage = React.lazy(() => import('@/pages/admin/AdminOrderDetailsPage'));
+const AdminServicesPage = React.lazy(() => import('@/pages/admin/AdminServicesPage'));
+const AdminInventoryPage = React.lazy(() => import('@/pages/admin/AdminInventoryPage'));
+const AdminExpensesPage = React.lazy(() => import('@/pages/admin/AdminExpensesPage'));
+const POSPage = React.lazy(() => import('@/pages/admin/POSPage'));
+const AdminMarketingPage = React.lazy(() => import('@/pages/admin/AdminMarketingPage'));
 
 // Washer pages
-import WasherOrdersPage from '@/pages/washer/WasherOrdersPage';
+const WasherOrdersPage = React.lazy(() => import('@/pages/washer/WasherOrdersPage'));
+const WasherOrderDetailsPage = React.lazy(() => import('@/pages/washer/WasherOrderDetailsPage'));
+
+// Scanner
+import ScanRouter from '@/pages/ScanRouter';
 
 // Manager pages
-import ManagerDashboardPage from '@/pages/manager/ManagerDashboardPage';
-import ManagerOrdersPage from '@/pages/manager/ManagerOrdersPage';
+const ManagerDashboardPage = React.lazy(() => import('@/pages/manager/ManagerDashboardPage'));
+const ManagerOrdersPage = React.lazy(() => import('@/pages/manager/ManagerOrdersPage'));
+
+// Driver pages
+const DriverDeliveriesPage = React.lazy(() => import('@/pages/driver/DriverDeliveriesPage'));
+const DriverAvailablePage = React.lazy(() => import('@/pages/driver/DriverAvailablePage'));
 
 import './index.css';
 
@@ -98,12 +114,22 @@ function WasherRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Requires DRIVER */
+function DriverRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <Loading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'DRIVER') return <Navigate to={roleHome(user.role)} replace />;
+  return <>{children}</>;
+}
+
 /** Maps role to its home URL */
 function roleHome(role: string): string {
   switch (role) {
     case 'ADMIN':   return '/admin/dashboard';
     case 'MANAGER': return '/manager/dashboard';
     case 'WASHER':  return '/washer/orders';
+    case 'DRIVER':  return '/driver/deliveries';
     default:        return '/dashboard';
   }
 }
@@ -111,7 +137,7 @@ function roleHome(role: string): string {
 // ── Global UI elements (Navbar + Chatbot hidden in staff portals) ─────────────
 function GlobalUI() {
   const location = useLocation();
-  const isStaffPortal = ['/admin', '/washer', '/manager'].some(p => location.pathname.startsWith(p));
+  const isStaffPortal = ['/admin', '/washer', '/manager', '/driver'].some(p => location.pathname.startsWith(p));
   if (isStaffPortal) return null;
   return (
     <>
@@ -126,16 +152,19 @@ function App() {
   return (
     <BrowserRouter>
       <GlobalUI />
-      <Routes>
+      <React.Suspense fallback={<Loading />}>
+        <Routes>
         {/* ── Public ── */}
         <Route path="/"         element={<HomePage />} />
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/scan/:publicId" element={<ScanRouter />} />
 
         {/* ── Customer portal ── */}
         <Route path="/dashboard"  element={<CustomerRoute><DashboardPage /></CustomerRoute>} />
         <Route path="/orders/new" element={<CustomerRoute><NewOrderPage /></CustomerRoute>} />
         <Route path="/orders"     element={<CustomerRoute><OrdersPage /></CustomerRoute>} />
+        <Route path="/subscriptions" element={<CustomerRoute><SubscriptionsPage /></CustomerRoute>} />
         <Route path="/account"    element={<PrivateRoute><AccountPage /></PrivateRoute>} />
         <Route path="/settings"   element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
 
@@ -146,6 +175,9 @@ function App() {
           <Route path="orders"    element={<AdminOrdersPage />} />
           <Route path="orders/:publicId" element={<AdminOrderDetailsPage />} />
           <Route path="services"  element={<AdminServicesPage />} />
+          <Route path="inventory" element={<AdminInventoryPage />} />
+          <Route path="expenses"  element={<AdminExpensesPage />} />
+          <Route path="marketing" element={<AdminMarketingPage />} />
           <Route path="pos"       element={<POSPage />} />
         </Route>
 
@@ -162,13 +194,23 @@ function App() {
         <Route path="/washer" element={<WasherRoute><WasherLayout /></WasherRoute>}>
           <Route index element={<Navigate to="orders" replace />} />
           <Route path="orders"  element={<WasherOrdersPage />} />
+          <Route path="orders/:publicId" element={<WasherOrderDetailsPage />} />
           <Route path="pos"     element={<POSPage />} />
           <Route path="account" element={<AccountPage />} />
         </Route>
 
+        {/* ── Driver portal ── */}
+        <Route path="/driver" element={<DriverRoute><DriverLayout /></DriverRoute>}>
+          <Route index element={<Navigate to="deliveries" replace />} />
+          <Route path="deliveries" element={<DriverDeliveriesPage />} />
+          <Route path="available"  element={<DriverAvailablePage />} />
+          <Route path="account"    element={<AccountPage />} />
+        </Route>
+
         {/* ── Fallback ── */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </React.Suspense>
     </BrowserRouter>
   );
 }
@@ -176,10 +218,14 @@ function App() {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <OrderWebSocket />
-        <App />
-      </AuthProvider>
+      <ErrorBoundary>
+        <ToastProvider>
+          <AuthProvider>
+            <OrderWebSocket />
+            <App />
+          </AuthProvider>
+        </ToastProvider>
+      </ErrorBoundary>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </React.StrictMode>,

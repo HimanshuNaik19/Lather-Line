@@ -1,19 +1,27 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Package, Plus, CreditCard } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Package, Plus, CreditCard, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
+import { SkeletonCard } from '@/components/LoadingSkeleton';
 import { useMyOrdersPage } from '@/hooks/useOrders';
-import { useCheckoutSession } from '@/hooks/usePayment';
+import { usePayments } from '@/hooks/usePayments';
+import { useAuth } from '@/hooks/useAuth';
 import { formatOrderRef } from '@/utils/orderRef';
 
 const PAGE_SIZE = 8;
 
 export default function OrdersPage() {
   const [page, setPage] = useState(0);
+  const [searchParams] = useSearchParams();
   const { data, isLoading, error, isFetching } = useMyOrdersPage(page, PAGE_SIZE);
-  const checkoutMutation = useCheckoutSession();
+  const { processPayment } = usePayments();
+  const { user } = useAuth();
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  const paymentState = searchParams.get('payment');
+  const paymentOrderId = searchParams.get('orderId');
 
   const orders = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -40,9 +48,23 @@ export default function OrdersPage() {
           </Link>
         </div>
 
+        {paymentState && (
+          <div
+            className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+              paymentState === 'success'
+                ? 'border-green-500/30 bg-green-500/10 text-green-300'
+                : 'border-yellow-500/30 bg-yellow-500/10 text-yellow-200'
+            }`}
+          >
+            {paymentState === 'success'
+              ? `Payment recorded for order ${paymentOrderId ? `#${formatOrderRef(paymentOrderId)}` : ''}.`
+              : `Payment was cancelled for order ${paymentOrderId ? `#${formatOrderRef(paymentOrderId)}` : ''}.`}
+          </div>
+        )}
+
         {isLoading && (
-          <div className="flex justify-center py-24">
-            <Loader2 size={32} className="animate-spin text-brand-400" />
+          <div className="space-y-4">
+            <SkeletonCard count={3} />
           </div>
         )}
 
@@ -93,15 +115,25 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <p className="text-brand-400 font-bold text-lg">Rs {order.totalAmount}</p>
+                    <p className="text-brand-400 font-bold text-lg">₹{order.totalAmount}</p>
                     <p className="text-xs text-gray-500">Placed {format(new Date(order.createdAt), 'dd MMM')}</p>
-                    {order.paymentStatus === 'PENDING' && (
+                    {order.paymentStatus === 'PENDING' && order.paymentMethod !== 'CASH' && (
                       <button
-                        onClick={() => checkoutMutation.mutate(order.publicId)}
-                        disabled={checkoutMutation.isPending}
+                        onClick={() => {
+                          setProcessingId(order.publicId);
+                          processPayment(
+                            order.publicId,
+                            user?.fullName || 'Customer',
+                            user?.email || '',
+                            user?.phone || '9999999999',
+                            () => { setProcessingId(null); window.location.reload(); },
+                            (err) => { setProcessingId(null); alert(err.message || 'Payment failed'); }
+                          );
+                        }}
+                        disabled={processingId === order.publicId}
                         className="mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors disabled:opacity-50"
                       >
-                        {checkoutMutation.isPending && checkoutMutation.variables === order.publicId ? (
+                        {processingId === order.publicId ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
                           <CreditCard size={14} />

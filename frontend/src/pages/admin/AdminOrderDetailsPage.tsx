@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Clock3, MapPin, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { useOrder } from '@/hooks/useOrders';
@@ -11,6 +12,16 @@ const flow = ['PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY', 'DELIVERED'] as co
 export default function AdminOrderDetailsPage() {
   const { publicId = '' } = useParams();
   const { data: order, isLoading } = useOrder(publicId);
+  const [isPrintingTag, setIsPrintingTag] = useState(false);
+
+  useEffect(() => {
+    if (isPrintingTag) {
+      setTimeout(() => {
+        window.print();
+        setIsPrintingTag(false);
+      }, 100);
+    }
+  }, [isPrintingTag]);
 
   const activeIndex = useMemo(
     () => flow.indexOf((order?.orderStatus as typeof flow[number]) ?? 'PENDING'),
@@ -22,7 +33,23 @@ export default function AdminOrderDetailsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto text-white space-y-6">
+    <>
+    {isPrintingTag && (
+      <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center p-8 text-black print-only-view">
+        <h1 className="text-3xl font-bold mb-2">Lather & Line</h1>
+        <p className="text-xl mb-8">Order #{formatOrderRef(order.publicId)}</p>
+        <QRCodeSVG 
+          value={`${window.location.origin}/scan/${order.publicId}`} 
+          size={256} 
+          level="H" 
+          includeMargin 
+        />
+        <p className="mt-8 text-lg font-medium">{order.addressCity}</p>
+        <p className="text-md text-gray-600 mt-2">{order.items.reduce((acc, item) => acc + item.quantity, 0)} items total</p>
+      </div>
+    )}
+    
+    <div className={`max-w-7xl mx-auto text-white space-y-6 ${isPrintingTag ? 'hidden' : ''}`}>
       <div>
         <Link to="/admin/orders" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-xl mb-2">
           <ArrowLeft size={18} />
@@ -125,11 +152,13 @@ export default function AdminOrderDetailsPage() {
 
           <div className="bg-surface-dark border border-surface-border rounded-2xl p-6 space-y-3 no-print">
             <h2 className="font-semibold text-base">Quick Actions</h2>
-            <button onClick={() => window.print()} className="w-full py-3 rounded-lg border border-surface-border hover:bg-surface-border transition-colors text-xl">Print Receipt</button>
-            <button className="w-full py-3 rounded-lg border border-surface-border text-xl">Send WhatsApp Reminder</button>
+            <button onClick={() => window.print()} className="w-full py-3 rounded-lg border border-surface-border hover:bg-surface-border transition-colors text-sm font-semibold">Print Receipt</button>
+            <button onClick={() => setIsPrintingTag(true)} className="w-full py-3 rounded-lg bg-brand-gradient text-white hover:shadow-glow-brand transition-all text-sm font-semibold">Print QR Bag Tag</button>
+            <button className="w-full py-3 rounded-lg border border-surface-border text-sm font-semibold">Send WhatsApp Reminder</button>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }

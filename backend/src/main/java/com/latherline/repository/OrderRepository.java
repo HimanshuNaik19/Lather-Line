@@ -46,4 +46,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "GROUP BY oi.serviceType.name " +
            "ORDER BY SUM(oi.subtotal) DESC")
     List<Object[]> topServicesByRevenue(Pageable pageable);
+
+    // ── Driver delivery queries ───────────────────────────────────────────────
+    List<Order> findByDriverId(Long driverId);
+    List<Order> findByOrderStatusAndDriverIsNull(OrderStatus status);
 }

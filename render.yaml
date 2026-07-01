@@ -1,0 +1,42 @@
+services:
+  # Backend Spring Boot Service
+  - type: web
+    name: latherline-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        value: # Set in Render dashboard (Neon host)
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: # Set in Render dashboard
+      - key: DB_USER
+        value: # Set in Render dashboard
+      - key: DB_PASSWORD
+        value: # Set in Render dashboard (Neon password)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+    healthCheckPath: /actuator/health
+
+  # Frontend React/Vite App
+  - type: web
+    name: latherline-frontend
+    env: docker
+    dockerfilePath: frontend/Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: latherline-backend
+          envVarKey: RENDER_EXTERNAL_URL

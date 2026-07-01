@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Building2, ChevronDown, LayoutDashboard, LogOut, Menu, Package, Settings, Shirt, User, X } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Building2, ChevronDown, LayoutDashboard, LogOut, Menu, Package, Settings, Shirt, User, X, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,7 @@ export function Navbar() {
     ? [
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/orders', label: 'My Orders', icon: Package },
+        { to: '/subscriptions', label: 'Subscriptions', icon: Zap },
       ]
     : [];
 
@@ -40,6 +42,7 @@ export function Navbar() {
       : []),
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/orders', label: 'My Orders', icon: Package },
+    { to: '/subscriptions', label: 'Subscriptions', icon: Zap },
     { to: '/account', label: 'Account', icon: User },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -58,16 +61,21 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            {navLinks.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-brand-400 transition-colors"
-              >
-                <Icon size={15} />
-                {label}
-              </Link>
-            ))}
+            {navLinks.map(({ to, label, icon: Icon }) => {
+              const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`flex items-center gap-1.5 text-sm transition-colors ${
+                    isActive ? 'text-brand-400 font-medium' : 'text-gray-400 hover:text-brand-400'
+                  }`}
+                >
+                  <Icon size={15} />
+                  {label}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -170,17 +178,22 @@ export function Navbar() {
 
             {!isLoading && (isAuthenticated ? (
               <>
-                {dropdownItems.map(({ to, label, icon: Icon }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-2 py-2.5 text-gray-300 hover:text-brand-400 rounded-lg hover:bg-white/5 transition-colors"
-                  >
-                    <Icon size={16} />
-                    {label}
-                  </Link>
-                ))}
+                {dropdownItems.map(({ to, label, icon: Icon }) => {
+                  const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors ${
+                        isActive ? 'bg-brand-500/10 text-brand-400' : 'text-gray-300 hover:text-brand-400 hover:bg-white/5'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      {label}
+                    </Link>
+                  );
+                })}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-2 py-2.5 text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 transition-colors mt-2"

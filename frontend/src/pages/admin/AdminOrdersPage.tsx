@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
 import { formatOrderRef } from '@/utils/orderRef';
 import { useMarkAsPaid } from '@/hooks/usePayment';
+import { useDriverList, useAssignDriver } from '@/hooks/useDeliveries';
 
 const STATUSES: Array<'ALL' | OrderStatus> = ['ALL', 'PENDING', 'PICKED_UP', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'];
 
@@ -15,6 +16,8 @@ export default function AdminOrdersPage() {
   const { data: orders, isLoading, error } = useAllOrders();
   const deleteOrder = useDeleteOrder();
   const markAsPaid = useMarkAsPaid();
+  const { data: drivers } = useDriverList();
+  const assignDriver = useAssignDriver();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'ALL' | OrderStatus>('ALL');
 
@@ -120,6 +123,25 @@ export default function AdminOrdersPage() {
                       <span className="text-sm font-bold border border-current px-2 py-0.5 rounded-lg">₹</span>
                     )}
                   </button>
+                )}
+                {order.orderStatus === 'READY' && !order.driverId && (
+                  <select
+                    onChange={(e) => {
+                      const driverId = parseInt(e.target.value);
+                      if (driverId) {
+                        e.preventDefault();
+                        assignDriver.mutate({ orderId: order.publicId, driverId });
+                      }
+                    }}
+                    onClick={(e) => e.preventDefault()}
+                    defaultValue=""
+                    className="bg-surface border border-surface-border rounded-lg px-2 py-1 text-sm text-cyan-400 outline-none w-32"
+                  >
+                    <option value="" disabled>Assign Driver</option>
+                    {drivers?.map(d => (
+                      <option key={d.id} value={d.id}>{d.fullName}</option>
+                    ))}
+                  </select>
                 )}
                 <button
                   onClick={(e) => {

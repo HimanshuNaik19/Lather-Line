@@ -26,7 +26,10 @@ export function useCreateOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateOrderRequest) => ordersApi.createOrder(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ORDER_KEYS.all });
+      qc.invalidateQueries({ queryKey: ORDER_KEYS.mine });
+    },
   });
 }
 
@@ -59,7 +62,11 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data: StatusUpdateRequest }) =>
       ordersApi.updateStatus(publicId, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ORDER_KEYS.all }); },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ORDER_KEYS.all });
+      qc.invalidateQueries({ queryKey: ['deliveries'] });
+      qc.invalidateQueries({ queryKey: ORDER_KEYS.detail(variables.publicId) });
+    },
   });
 }
 

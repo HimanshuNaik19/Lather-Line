@@ -31,6 +31,30 @@ public class AuthDto {
     }
 
     @Data
+    public static class RegisterBusinessRequest {
+        @NotBlank @Email
+        private String email;
+
+        @NotBlank @Size(min = 8, message = "Password must be at least 8 characters")
+        private String password;
+
+        @NotBlank
+        private String fullName;
+
+        private String phone;
+
+        @NotBlank(message = "Business name is required")
+        private String businessName;
+
+        @NotBlank(message = "Business code is required. This will be your store's unique identifier.")
+        @Size(min = 3, max = 50, message = "Business code must be between 3 and 50 characters")
+        private String businessCode;
+
+        private String contactEmail;
+        private String addressText;
+    }
+
+    @Data
     public static class LoginRequest {
         @NotBlank @Email
         private String email;

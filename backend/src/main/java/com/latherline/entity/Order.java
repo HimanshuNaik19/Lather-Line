@@ -51,6 +51,14 @@ public class Order {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id")
+    private User driver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
+
     // ── Fields ───────────────────────────────────────────────────────────────
     @Column(nullable = false)
     private LocalDateTime pickupTime;
@@ -65,10 +73,38 @@ public class Order {
     @Builder.Default
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 20)
+    @Builder.Default
+    private com.latherline.enums.PaymentMethod paymentMethod = com.latherline.enums.PaymentMethod.PAY_LATER;
+
     @Column(name = "stripe_session_id", length = 255)
     private String stripeSessionId;
 
-    /** Server-computed sum of all order_items.subtotal — never trusted from frontend */
+    @Column(name = "razorpay_order_id", length = 255)
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_payment_id", length = 255)
+    private String razorpayPaymentId;
+
+    @Column(name = "razorpay_signature", length = 255)
+    private String razorpaySignature;
+
+    @Column(name = "inventory_deducted", nullable = false)
+    private boolean inventoryDeducted = false;
+
+    @Column(name = "cogs", nullable = false)
+    private BigDecimal cogs = BigDecimal.ZERO;
+
+    /** Server-computed base sum of all order_items.subtotal */
+    @Column(name = "subtotal_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    /** Final amount after discounts */
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
@@ -122,6 +158,9 @@ public class Order {
     public Address getAddress() { return address; }
     public void setAddress(Address address) { this.address = address; }
 
+    public User getDriver() { return driver; }
+    public void setDriver(User driver) { this.driver = driver; }
+
     public LocalDateTime getPickupTime() { return pickupTime; }
     public void setPickupTime(LocalDateTime pickupTime) { this.pickupTime = pickupTime; }
 
@@ -134,8 +173,35 @@ public class Order {
     public String getStripeSessionId() { return stripeSessionId; }
     public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
 
+    public com.latherline.enums.PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(com.latherline.enums.PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getRazorpayOrderId() { return razorpayOrderId; }
+    public void setRazorpayOrderId(String razorpayOrderId) { this.razorpayOrderId = razorpayOrderId; }
+
+    public String getRazorpayPaymentId() { return razorpayPaymentId; }
+    public void setRazorpayPaymentId(String razorpayPaymentId) { this.razorpayPaymentId = razorpayPaymentId; }
+
+    public String getRazorpaySignature() { return razorpaySignature; }
+    public void setRazorpaySignature(String razorpaySignature) { this.razorpaySignature = razorpaySignature; }
+
+    public boolean isInventoryDeducted() { return inventoryDeducted; }
+    public void setInventoryDeducted(boolean inventoryDeducted) { this.inventoryDeducted = inventoryDeducted; }
+
+    public BigDecimal getCogs() { return cogs; }
+    public void setCogs(BigDecimal cogs) { this.cogs = cogs; }
+
+    public BigDecimal getSubtotalAmount() { return subtotalAmount; }
+    public void setSubtotalAmount(BigDecimal subtotalAmount) { this.subtotalAmount = subtotalAmount; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+
+    public Coupon getCoupon() { return coupon; }
+    public void setCoupon(Coupon coupon) { this.coupon = coupon; }
 
     public String getSpecialInstructions() { return specialInstructions; }
     public void setSpecialInstructions(String specialInstructions) { this.specialInstructions = specialInstructions; }

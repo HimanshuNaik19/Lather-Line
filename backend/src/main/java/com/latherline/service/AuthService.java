@@ -100,6 +100,55 @@ public class AuthService {
         }
     }
 
+    public AuthDto.AuthSession registerBusiness(AuthDto.RegisterBusinessRequest request) {
+        // Normalize code
+        String code = request.getBusinessCode().trim().toLowerCase().replaceAll("\\s+", "-");
+
+        // Ensure code is unique
+        if (businessRepository.findByCode(code).isPresent()) {
+            throw new ConflictException("Business code '" + code + "' is already taken. Please choose another.");
+        }
+
+        // Create the new business
+        Business business = new Business(
+                request.getBusinessName().trim(),
+                code,
+                request.getContactEmail() != null ? request.getContactEmail() : request.getEmail(),
+                request.getPhone(),
+                request.getAddressText(),
+                true
+        );
+        business = businessRepository.save(business);
+
+        // Now create the ADMIN user under this business
+        final Long businessId = business.getId();
+        TenantContextHolder.setTenantId(businessId);
+        try {
+            return transactionTemplate.execute(status -> {
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    throw new ConflictException("Email already registered: " + request.getEmail());
+                }
+
+                User user = new User(
+                        businessId,
+                        request.getEmail(),
+                        passwordEncoder.encode(request.getPassword()),
+                        UserRole.ADMIN,
+                        request.getPhone(),
+                        request.getFullName()
+                );
+
+                userRepository.save(user);
+
+                Map<String, Object> claims = Map.of("businessId", businessId);
+                String token = jwtUtil.generateToken(claims, toUserDetails(user));
+                return new AuthDto.AuthSession(token, toAuthResponse(user));
+            });
+        } finally {
+            TenantContextHolder.clear();
+        }
+    }
+
     @Transactional(readOnly = true)
     public AuthDto.AuthSession login(AuthDto.LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())

@@ -38,6 +38,16 @@ public class AuthController {
                 .body(session.getUser());
     }
 
+    @PostMapping("/register/business")
+    public ResponseEntity<AuthDto.AuthResponse> registerBusiness(
+            @Valid @RequestBody AuthDto.RegisterBusinessRequest request) {
+        AuthDto.AuthSession session = authService.registerBusiness(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .header(HttpHeaders.SET_COOKIE, buildJwtCookie(session.getToken()).toString())
+                .body(session.getUser());
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthDto.AuthResponse> login(
             @Valid @RequestBody AuthDto.LoginRequest request) {

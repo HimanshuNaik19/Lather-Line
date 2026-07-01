@@ -5,27 +5,33 @@ A full-stack **B2B SaaS laundry management platform** built with Spring Boot and
 ## ✨ Features
 
 ### Customer App
+- **Progressive Web App (PWA):** Installable on mobile devices with native-like experience.
 - Browse available laundry services
 - Schedule pickup orders with date/time/address selection
-- Track order status in real-time
+- **Real-Time Tracking:** Powered by WebSockets, see when drivers pickup or washers clean your clothes.
+- **Online Payments:** Secure checkout via Razorpay integration.
 - Live AI chatbot assistant
 
-### Business Admin Portal
-- Dedicated `/admin` dashboard for laundry business owners
-- Overview of all orders, revenue, and pending pickups
-- Isolated data — each business only sees their own orders
+### Business Portals (Multi-Tenant)
+- **Admin Dashboard:** Full financial overview, marketing tools, and inventory management.
+- **Manager Dashboard:** Day-to-day operations and POS system.
+- **Washer Portal:** Interface for facility workers to update item statuses (e.g. IN_WASH).
+- **Driver Portal:** Interface for delivery personnel to track pickups and dropoffs.
+- **Isolated Data:** Each business (tenant) only sees their own orders via Hibernate `@TenantId`.
 
 ## 🏗️ Architecture
 
 ```
 Lether-line/
-├── backend/      # Spring Boot 3.2 + Hibernate 6 + PostgreSQL
-├── frontend/     # React 18 + TypeScript + Vite + TailwindCSS
+├── backend/      # Java 21, Spring Boot 3.2, Hibernate 6, WebSockets (STOMP)
+├── frontend/     # React 18, TypeScript, Vite, Tailwind CSS, PWA, Razorpay
 └── infra/        # Docker Compose (PostgreSQL)
 ```
 
 ### Multi-Tenancy
-Uses Hibernate 6's `@TenantId` for shared-schema multi-tenancy. Every `User`, `Order`, `Address`, and `ServiceType` is scoped to a `business_id` automatically.
+Uses Hibernate 6's `@TenantId` for shared-schema multi-tenancy. Every `User`, `Order`, `Address`, and `ServiceType` is scoped to a `business_id` automatically. When users register, they use a specific store's "Invite Code" to securely bind to that tenant.
+
+> **Want to learn how this works?** Check out the `learning_guide.md` and `interview_and_hosting_guide.md` artifacts generated in this project for deep dives into WebSockets, Role-Based Access Control, and Deployment.
 
 ## 🚀 Getting Started
 

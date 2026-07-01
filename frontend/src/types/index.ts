@@ -4,6 +4,7 @@ export type OrderStatus =
   | 'PICKED_UP'
   | 'IN_PROGRESS'
   | 'READY'
+  | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
   | 'CANCELLED';
 
@@ -12,6 +13,11 @@ export type PaymentStatus =
   | 'PAID'
   | 'FAILED'
   | 'REFUNDED';
+
+export type PaymentMethod = 
+  | 'ONLINE'
+  | 'CASH'
+  | 'PAY_LATER';
 
 // Pricing unit for a service
 export type ServiceUnit = 'KG' | 'PIECE';
@@ -26,6 +32,34 @@ export interface ServiceType {
   turnaroundHours?: number;
   description: string;
   active: boolean;
+}
+
+// Coupons and Subscriptions
+export interface Coupon {
+  id: number;
+  code: string;
+  discountPercentage: number;
+  maxDiscount?: number;
+  validUntil?: string;
+  isActive: boolean;
+}
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  price: number;
+  includedKg: number;
+  includedPieces: number;
+  isActive: boolean;
+}
+
+export interface UserSubscription {
+  id: number;
+  plan: SubscriptionPlan;
+  status: string;
+  currentPeriodEnd: string;
+  remainingKg: number;
+  remainingPieces: number;
 }
 
 // Address mirrors Address.java entity
@@ -73,9 +107,18 @@ export interface Order {
   pickupTime: string;          // ISO-8601
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  razorpayOrderId?: string;
+  subtotalAmount?: number;
+  discountAmount?: number;
   totalAmount: number;
+  couponCode?: string;
   specialInstructions?: string;
   createdAt: string;           // ISO-8601
+  driverName?: string;
+  driverId?: number;
+  addressLatitude?: number;
+  addressLongitude?: number;
 }
 
 // Per-item payload for creating an order
@@ -94,6 +137,8 @@ export interface CreateOrderRequest {
   pinCode: string;
   pickupTime: string;          // ISO-8601
   specialInstructions?: string;
+  couponCode?: string;
+  paymentMethod: PaymentMethod;
 }
 
 // Walk-in POS order creation (staff)
@@ -102,6 +147,7 @@ export interface PosCreateRequest {
   customerName: string;
   items: OrderItemRequest[];
   specialInstructions?: string;
+  couponCode?: string;
 }
 
 // For PATCH /api/orders/:publicId/status
@@ -113,7 +159,7 @@ export interface StatusUpdateRequest {
 export interface AuthResponse {
   email: string;
   fullName: string;
-  role: 'CUSTOMER' | 'WASHER' | 'MANAGER' | 'ADMIN';
+  role: 'CUSTOMER' | 'WASHER' | 'MANAGER' | 'ADMIN' | 'DRIVER';
   businessId: number;
   phone?: string;
 }
@@ -123,12 +169,65 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface CreateDriverRequest {
+  fullName: string;
+  phone: string;
+  password?: string;
+}
+
+// ── Inventory & Expenses ──────────────────────────────────────────────────
+
+export interface InventoryItem {
+  id: number;
+  businessId?: number;
+  name: string;
+  unit: string;
+  quantityInStock: number;
+  costPerUnit: number;
+  lowStockThreshold: number;
+}
+
+export interface ServiceInventoryRequirement {
+  id: number;
+  serviceType: ServiceType;
+  inventoryItem: InventoryItem;
+  quantityRequired: number;
+}
+
+export interface Expense {
+  id: number;
+  businessId?: number;
+  amount: number;
+  category: string;
+  expenseDate: string; // YYYY-MM-DD
+  description: string;
+}
+
+export interface ProfitabilityReport {
+  totalRevenue: number;
+  totalCogs: number;
+  totalOperatingExpenses: number;
+  netProfit: number;
+  profitMarginPercentage: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
   phone?: string;
   businessCode: string;
+}
+
+export interface RegisterBusinessRequest {
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+  businessName: string;
+  businessCode: string;
+  contactEmail?: string;
+  addressText?: string;
 }
 
 // Chat types

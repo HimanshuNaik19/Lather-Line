@@ -1,5 +1,5 @@
 import { axiosClient } from './axiosClient';
-import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types';
+import type { AuthResponse, LoginRequest, RegisterRequest, RegisterBusinessRequest } from '@/types';
 
 export const authApi = {
   login: (data: LoginRequest) =>
@@ -7,6 +7,9 @@ export const authApi = {
 
   register: (data: RegisterRequest) =>
     axiosClient.post<AuthResponse>('/auth/register', data).then((r) => r.data),
+
+  registerBusiness: (data: RegisterBusinessRequest) =>
+    axiosClient.post<AuthResponse>('/auth/register/business', data).then((r) => r.data),
 
   getCurrentUser: () =>
     axiosClient.get<AuthResponse>('/auth/me').then((r) => r.data),
