@@ -4,6 +4,7 @@ services:
     name: latherline-backend
     env: docker
     dockerfilePath: backend/Dockerfile
+    dockerContext: backend
     plan: free
     region: singapore
     envVars:
@@ -36,6 +37,7 @@ services:
     name: latherline-frontend
     env: docker
     dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
     plan: free
     region: singapore
     envVars:
